@@ -16,6 +16,9 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
     m_net = mnet(simg)
     v_net = vnet(simg)
 
+    m_avg = mavg(simg)
+    v_avg = vavg(simg)
+
     βlp = lpmodes(simg, lpmode)
     βcp = cpmodes(simg, cpmode)
 
@@ -29,7 +32,7 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
     n_argcp = Tuple((Symbol("arg_betacp", "_$n") for n in cpmode))
     arg_betacp = NamedTuple{n_argcp}(map(angle, βcp))
 
-    return merge(xopt, (;m_net), amp_betalp, arg_betalp, (;v_net), amp_betacp, arg_betacp)
+    return merge(xopt, (;m_net, m_avg), amp_betalp, arg_betalp, (;v_net, v_avg), amp_betacp, arg_betacp)
 end
 
 function summary_ringparams(img::IntensityMap{<:Real};
