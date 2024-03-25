@@ -1,4 +1,13 @@
+"""
+    summary_ringparams(img::IntensityMap;
+                        lpmode=(2,), cpmode=(1,),
+                        order=1, maxiters=1000)
 
+Analyes the image `img` and produces summary statistics about the it.
+For stokes I this includes all the ring parameters from [`center_ring`](@ref).
+If the image is polarized this also includes the linear and circular polarization modes
+beta modes given by `lpmode` and `cpmode` respectively, as well as `mnet` and `vnet`.
+"""
 function summary_ringparams(img::IntensityMap{<:StokesParams};
                             lpmode=(2,), cpmode=(1,),
                             order=1, maxiters=1000)
