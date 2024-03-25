@@ -1,0 +1,13 @@
+name = "VLBIImagingSummaryStats"
+uuid = "5a169920-935a-41fb-9b04-eb7915926c08"
+authors = ["Paul Tiede <ptiede91@gmail.com> and contributors"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.8"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
