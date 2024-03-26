@@ -40,15 +40,17 @@ Extract summary statistics from a set of images.
 - `-c, --code=<string>`: The file containing the code used to generate the images. If nothing will ignore.
 - `-f, --fevals=<int>`: The number of evaluations allowed when extracting params
 - `-s, --stride=<int>`: The checkpointing stride
+- `-o, --order=<int>`: The order of the ring parameters
 
 # Flags
 
 - `-r, --regrid`: Regrid the images before extracting
 - `--restart`: Restart the extraction process from before
 """
-@main function main(imfiles::String, outname::String; fevals::Int=1000, stride::Int=2*nworkers(), code::String="", regrid::Bool=false, restart::Bool=false)
+@main function main(imfiles::String, outname::String; fevals::Int=1000, stride::Int=2*nworkers(), code::String="", order=2, regrid::Bool=false, restart::Bool=false)
     @info "Image files path: $(imfiles)"
     @info "Outputting results to $(outname)"
+    @info "Using a $(order) order ring model"
 
     imfs = loaddir(imfiles)
     @info "Loaded $(length(imfs)) files"
@@ -85,7 +87,7 @@ Extract summary statistics from a set of images.
             else
                 rimg = img
             end
-            stats = summary_ringparams(rimg; maxiters=fevals)
+            stats = summary_ringparams(rimg; maxiters=fevals, order)
             return stats
         end
         dftmp = DataFrame(res)

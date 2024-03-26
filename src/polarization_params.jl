@@ -120,7 +120,7 @@ This is a biased estimator that depends on the effective resolution of the image
 field of view. To make comparissons with data you should first debias this result based
 on synthetic data tests.
 """
-mavg(img::AbstractArray{<:StokesParams}) = mean(abs.(linearpol, img))/sum(stokes(img, :I))
+mavg(img::AbstractArray{<:StokesParams}) = sum(abs.(linearpol.(img)))/sum(stokes(img, :I))
 
 """
     vavg(img::IntensityMap{<:StokesParams})
@@ -132,4 +132,4 @@ This is a biased estimator that depends on the effective resolution of the image
 field of view. To make comparissons with data you should first debias this result based
 on synthetic data tests.
 """
-vavg(img::AbstractArray{<:StokesParams}) = mean(abs.(stokes(img, :V)))/sum(stokes(img, :I))
+vavg(img::AbstractArray{<:StokesParams}) = sum(abs.(stokes(img, :V)))/sum(stokes(img, :I))
