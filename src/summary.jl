@@ -22,17 +22,17 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
     βlp = lpmodes(simg, lpmode)
     βcp = cpmodes(simg, cpmode)
 
-    n_amplp = Tuple((Symbol("amp_betalp", "_$n") for n in lpmode))
-    amp_betalp = NamedTuple{n_amplp}(map(abs, βlp))
-    n_arglp = Tuple((Symbol("arg_betalp", "_$n") for n in lpmode))
-    arg_betalp = NamedTuple{n_arglp}(map(angle, βlp))
+    n_relp = Tuple((Symbol("re_betalp", "_$n") for n in lpmode))
+    real_betalp = NamedTuple{n_relp}(map(real, βlp))
+    n_imlp = Tuple((Symbol("im_betalp", "_$n") for n in lpmode))
+    imag_betalp = NamedTuple{n_imlp}(map(imag, βlp))
 
-    n_ampcp = Tuple((Symbol("amp_betacp", "_$n") for n in cpmode))
-    amp_betacp = NamedTuple{n_ampcp}(map(abs, βcp))
-    n_argcp = Tuple((Symbol("arg_betacp", "_$n") for n in cpmode))
-    arg_betacp = NamedTuple{n_argcp}(map(angle, βcp))
+    n_recp = Tuple((Symbol("re_betacp", "_$n") for n in cpmode))
+    real_betacp = NamedTuple{n_recp}(map(real, βcp))
+    n_imcp = Tuple((Symbol("im_betacp", "_$n") for n in cpmode))
+    imag_betacp = NamedTuple{n_imcp}(map(imag, βcp))
 
-    return merge(xopt, (;m_net, m_avg), amp_betalp, arg_betalp, (;v_net, v_avg), amp_betacp, arg_betacp)
+    return merge(xopt, (;m_net, m_avg), real_betalp, imag_betalp, (;v_net, v_avg), real_betacp, imag_betacp)
 end
 
 function summary_ringparams(img::IntensityMap{<:Real};
