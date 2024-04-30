@@ -41,14 +41,14 @@ Extract summary statistics from a set of images.
 - `-f, --fevals=<int>`: The number of evaluations allowed when extracting params
 - `-s, --stride=<int>`: The checkpointing stride
 - `-o, --order=<int>`: The order of the ring parameters
-- `-b, --blur=<float>`: The amount of blurring to apply to the images in μas
+- `-b, --blur=<float>`: Gaussian FWHM blurring kernel to apply to the images in μas
 
 # Flags
 
 - `-r, --regrid`: Regrid the images before extracting
 - `--restart`: Restart the extraction process from before
 """
-@main function main(imfiles::String, outname::String; fevals::Int=1000, stride::Int=2*nworkers(), code::String="", order=4, blur=0.0, regrid::Bool=false, restart::Bool=false)
+@main function main(imfiles::String, outname::String; fevals::Int=20000, stride::Int=2*nworkers(), code::String="", order::Int=4, blur::Float64=0.0, regrid::Bool=false, restart::Bool=false)
     @info "Image files path: $(imfiles)"
     @info "Outputting results to $(outname)"
     @info "Using a $(order) order ring model"
@@ -91,7 +91,7 @@ Extract summary statistics from a set of images.
             end
 
             if blur > 0.0
-                rimg = Comrade.smooth(rimg, μas2rad(blur))
+                rimg = Comrade.smooth(rimg, μas2rad(blur)/(2*sqrt(2*log(2))))
             end
 
             stats = summary_ringparams(rimg; maxiters=fevals, order)
