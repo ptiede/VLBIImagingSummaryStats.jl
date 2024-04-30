@@ -7,3 +7,6 @@ DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 VIDA = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
 VLBIImagingSummaryStats = "5a169920-935a-41fb-9b04-eb7915926c08"
+
+[compat]
+VIDA = "^0.11.7"
