@@ -9,9 +9,9 @@ julia setup.jl
 After the setup is complete you can run the main script `main.jl` to produce the set of summary statistics. To run the script call
 
 ```bash
-julia main.jl filelist output.csv
+julia -p NCORES main.jl filelist output.csv
 ```
-where `filelist` is a text file containing paths the list of images to process and `output.csv` is the name of the output file. In addition there are several other options and flags
+where `NCORES` is the number of cores, `filelist` is a text file containing paths, the list of images to process, and `output.csv` is the name of the output file. In addition, there are several other options and flags
 
 ```
 # Options
