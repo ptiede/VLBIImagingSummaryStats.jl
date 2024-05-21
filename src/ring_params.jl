@@ -54,7 +54,7 @@ function find_ring_center(img::IntensityMap{<:Real}; order=1, maxiters=10_000)
                      Stretch(x.r0, x.r0), Shift(x.x0, x.y0))+
               modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
               x.f0*Constant(fieldofview(img).X)
-    lower = (r0 = μas2rad(15.0), σ = μas2rad(1.0),
+    lower = (r0 = μas2rad(10.0), σ = μas2rad(1.0),
              s = ntuple(_->0.001, order),
              ξ = ntuple(_->0.0, order),
              x0 = -μas2rad(15.0), y0 = -μas2rad(15.0),
@@ -63,7 +63,7 @@ function find_ring_center(img::IntensityMap{<:Real}; order=1, maxiters=10_000)
              yg = -fieldofview(img).Y/4,
              fg = 1e-6, f0 = 1e-6
              )
-    upper = (r0 = μas2rad(30.0), σ = μas2rad(8.0),
+    upper = (r0 = μas2rad(40.0), σ = μas2rad(20.0),
              s = ntuple(_->0.999, order),
              ξ = ntuple(_->2π, order),
              x0 = μas2rad(15.0), y0 = μas2rad(15.0),

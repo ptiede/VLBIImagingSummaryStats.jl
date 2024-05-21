@@ -9,9 +9,10 @@ If the image is polarized this also includes the linear and circular polarizatio
 beta modes given by `lpmode` and `cpmode` respectively, as well as `mnet` and `vnet`.
 """
 function summary_ringparams(img::IntensityMap{<:StokesParams};
-                            lpmode=(2,), cpmode=(1,),
-                            order=1, maxiters=1000)
-    xopt = summary_ringparams(stokes(img, :I); order, maxiters)
+                            lpmode=(1, 2,), cpmode=(1,),
+                            order=1, maxiters=1000,
+                            cfluxdiam = μas2rad(60.0))
+    xopt = summary_ringparams(stokes(img, :I); order, maxiters, cfluxdiam)
     simg = shifted(img, -xopt.x0, -xopt.y0)
     m_net = mnet(simg)
     v_net = vnet(simg)
@@ -21,6 +22,7 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
 
     βlp = lpmodes(simg, lpmode)
     βcp = cpmodes(simg, cpmode)
+
 
     n_relp = Tuple((Symbol("re_betalp", "_$n") for n in lpmode))
     real_betalp = NamedTuple{n_relp}(map(real, βlp))
@@ -37,10 +39,13 @@ end
 
 function summary_ringparams(img::IntensityMap{<:Real};
                             lpmodes=(2,), cpmodes=(1,),
-                            order=1, maxiters=1000)
+                            order=1, maxiters=1000, cfluxdiam=μas2rad(60.0))
     rimg = regrid(img, imagepixels(μas2rad(120.0), μas2rad(120.0), 32, 32))
     _, xopt, _ = center_ring(rimg; order, maxiters)
-    return _flatten_tuple(xopt)
+    radx = cfluxdiam/2 + xopt.x0
+    rady = cfluxdiam/2 + xopt.y0
+    cflux = flux(img[X=-radx..radx, Y=-rady..rady])
+    return merge(_flatten_tuple(xopt), (;cflux=cflux))
 end
 
 function _flatten_tuple(nt::NamedTuple)
