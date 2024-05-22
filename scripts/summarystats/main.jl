@@ -84,15 +84,17 @@ Extract summary statistics from a set of images.
         @info "Extracting from $(ii[begin]) to $(ii[end])"
         res = pmap(imfs[ii]) do f
             img = center_image(load_image(f; polarization=true))
+
+            if blur > 0.0
+                img = Comrade.smooth(img, μas2rad(blur)/(2*sqrt(2*log(2))))
+            end
+
             if regrid
                 rimg = Comrade.regrid(img, g)
             else
                 rimg = img
             end
 
-            if blur > 0.0
-                rimg = Comrade.smooth(rimg, μas2rad(blur)/(2*sqrt(2*log(2))))
-            end
 
             stats = summary_ringparams(rimg; maxiters=fevals, order)
             return stats
