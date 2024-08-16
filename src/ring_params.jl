@@ -53,7 +53,7 @@ function find_ring_center(img::IntensityMap{<:Real}; order=1, maxiters=10_000)
     ring(x) = modify(RingTemplate(RadialGaussian(x.σ/x.r0), AzimuthalCosine(x.s, x.ξ)),
                      Stretch(x.r0, x.r0), Shift(x.x0, x.y0))+
               modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
-              x.f0*VIDA.Constant(fieldofview(img).X)
+              x.f0*VLBISkyModels.Constant(fieldofview(img).X)
     lower = (r0 = μas2rad(10.0), σ = μas2rad(1.0),
              s = ntuple(_->0.001, order),
              ξ = ntuple(_->0.0, order),
