@@ -1,18 +1,18 @@
 """
-    lpmodes(img::IntensityMap{<:StokesParams}, modes::NTuple{<:Any, Int}; rmin=0, rmax=μas2rad(60.0))
+    lpmodes(img::IntensityMap{<:StokesParams}, modes::NTuple{N, Int}; rmin=0, rmax=μas2rad(60.0))
 
 Computes the linear polarization modes of an image.
 
 ## Arguments:
  - `img::IntensityMap{<:StokesParams}`: The image to analyze.
- - `modes::NTuple{<:Any, Int}`: The modes to compute.
+ - `modes::NTuple{N, Int}`: The modes to compute.
 
 ## Keyword Arguments:
     - `rmin::Real=0`: The minimum radius to consider.
     - `rmax::Real=μas2rad(60.0)`: The maximum radius to consider.
 
 ## Returns:
-    - `betas::NTuple{Complex}`: The coefficients of the modes.
+    - `betas::NTuple{N,Complex}`: The coefficients of the modes.
 
 ## Warning:
 
@@ -23,7 +23,7 @@ want to center the image, use `center_ring` before calling this function.
 ## Example:
 
 ```julia-repl
-julia> img = Comrade.load("image.fits")
+julia> img = load_image("image.fits")
 julia> cimg = center_ring(img)
 julia> βs = lpmodes(cimg, (1, 2)) # compute the first 2 modes
 ```
@@ -72,7 +72,7 @@ want to center the image, use `center_ring` before calling this function.
 ## Example:
 
 ```julia-repl
-julia> img = Comrade.load("image.fits")
+julia> img = load_image("image.fits")
 julia> cimg = center_ring(img)
 julia> βs = cpmodes(cimg, (1, 2)) # compute the first 2 modes
 ```

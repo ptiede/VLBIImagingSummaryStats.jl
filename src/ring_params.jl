@@ -53,7 +53,7 @@ function find_ring_center(img::IntensityMap{<:Real}; order=1, maxiters=10_000)
     ring(x) = modify(RingTemplate(RadialGaussian(x.σ/x.r0), AzimuthalCosine(x.s, x.ξ)),
                      Stretch(x.r0, x.r0), Shift(x.x0, x.y0))+
               modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
-              x.f0*Constant(fieldofview(img).X)
+              x.f0*VIDA.Constant(fieldofview(img).X)
     lower = (r0 = μas2rad(10.0), σ = μas2rad(1.0),
              s = ntuple(_->0.001, order),
              ξ = ntuple(_->0.0, order),
@@ -79,7 +79,10 @@ function find_ring_center(img::IntensityMap{<:Real}; order=1, maxiters=10_000)
           σg = μas2rad(40.0), xg = 0.0, yg = 0.0, fg = 0.2, f0=1e-3)
     prob = VIDAProblem(bh, ring, lower, upper)
     xopt, θopt, _ = vida(prob, ECA(;options=Options(f_calls_limit = maxiters, f_tol = 1e-5)); init_params=p0)
-    return xopt, θopt
+    sre = Tuple((xopt.s[n]*cos(xopt.ξ[n]) for n in 1:order))
+    sim = Tuple((xopt.s[n]*sin(xopt.ξ[n]) for n in 1:order))
+    xopt2 = delete(xopt, :s, :ξ)
+    return merge(xopt2, (;sre, sim)),  θopt
 end
 
 """

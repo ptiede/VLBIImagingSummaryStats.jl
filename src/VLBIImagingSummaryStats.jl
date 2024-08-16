@@ -7,6 +7,7 @@ export center_ring, find_ring_center, match_center_and_res,
 using Comrade
 using CSV
 using DataFrames
+using NamedTupleTools
 using VIDA
 using OptimizationMetaheuristics: OptimizationMetaheuristics, ECA, Options
 
