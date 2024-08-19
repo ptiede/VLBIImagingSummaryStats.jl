@@ -11,7 +11,7 @@ using Distributed
 using DelimitedFiles
 
 
-Pkg.add(path="../../")
+Pkg.develop(name="VLBIImagingSummaryStats")
 Pkg.instantiate()
 Pkg.precompile()
 
