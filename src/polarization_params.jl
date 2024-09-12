@@ -18,13 +18,13 @@ Computes the linear polarization modes of an image.
 
 These modes implicitly assume that the image is centered on the ring.
 If the image is not centered, the results will be incorrect. If you
-want to center the image, use `center_ring` before calling this function.
+want to center the image, use `center_template` before calling this function.
 
 ## Example:
 
 ```julia-repl
 julia> img = load_image("image.fits")
-julia> cimg = center_ring(img)
+julia> cimg = center_template(img)
 julia> βs = lpmodes(cimg, (1, 2)) # compute the first 2 modes
 ```
 """
@@ -67,13 +67,13 @@ Computes the circular polarization modes of an image.
 
 These modes implicitly assume that the image is centered on the ring.
 If the image is not centered, the results will be incorrect. If you
-want to center the image, use `center_ring` before calling this function.
+want to center the image, use `center_template` before calling this function.
 
 ## Example:
 
 ```julia-repl
 julia> img = load_image("image.fits")
-julia> cimg = center_ring(img)
+julia> cimg = center_template(img, MRing{2})
 julia> βs = cpmodes(cimg, (1, 2)) # compute the first 2 modes
 ```
 """
