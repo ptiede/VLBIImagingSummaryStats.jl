@@ -37,7 +37,7 @@ function center_template(img, template::Type;
                          div = Bhattacharyya, 
                          maxiters = 10_000)
     rimg = regrid(img, grid)
-    xopt, θopt = _center_template(rimg, template, div)
+    xopt, θopt = _center_template(rimg, template, div, maxiters)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
@@ -49,14 +49,14 @@ function center_template(img::IntensityMap{<:StokesParams}, template::Type;
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
-function _optimize(div, func, lower, upper, p0; maxiters = 8_000)
+function _optimize(div, func, lower, upper, p0, maxiters = 8_000)
     prob = VIDAProblem(div, func, lower, upper)
     xopt, θopt, dmin = vida(prob, ECA(;options=Options(f_calls_limit = maxiters, f_tol = 1e-5)); init_params=p0)
     # @info dmin
     return xopt, θopt
 end
 
-function _center_template(img::IntensityMap, ::Type{<:Disk}, div)
+function _center_template(img::IntensityMap, ::Type{<:Disk}, div, maxiters)
     bh = div(max.(img, 0.0))
 
     x0, y0 = centroid(img)
@@ -77,7 +77,7 @@ function _center_template(img::IntensityMap, ::Type{<:Disk}, div)
           τ = 0.01, ξτ = 0.1,
           x0 = x0, y0 = y0,
           f0=1e-3)
-    return _optimize(bh, temp, lower, upper, p0)
+    return _optimize(bh, temp, lower, upper, p0, maxiters)
 end
 
 @doc raw"""
@@ -125,7 +125,7 @@ function center_ring(img::IntensityMap; order=1, g=axisdims(img), maxiters=10_00
 end
 
 
-function _center_template(img::IntensityMap, ::Type{<:Gaussian},div)
+function _center_template(img::IntensityMap, ::Type{<:Gaussian}, div, maxiters)
     bh = div(max.(img, 0.0))
 
     x0, y0 = centroid(img)
@@ -153,7 +153,7 @@ function _center_template(img::IntensityMap, ::Type{<:Gaussian},div)
             # σg = μas2rad(40.0), xg = 0.0, yg = 0.0, fg = 0.2,
             f0=1e-3
         )
-    xopt, θopt = _optimize(bh, temp, lower, upper, p0; maxiters = 10_000)
+    xopt, θopt = _optimize(bh, temp, lower, upper, p0, maxiters)
     flip = xopt.x0 < xopt.x1
     # Find the center of light
     # shiftx = (xopt.f2*xopt.x1 + xopt.x0)/(xopt.f2 + 1)
@@ -171,11 +171,8 @@ function _center_template(img::IntensityMap, ::Type{<:Gaussian},div)
     return xopt, θopt
 end
 
-function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div) where {N}
-    # bh = Renyi(max.(img, 1e-10), 3.0)
+function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, maxiters) where {N}
     bh = div(max.(img, 0.0))
-    # bh = JensenShannon(max.(img, 0.0))
-    # bh = LeastSquares(max.(img, 0.0))
     x0, y0 = centroid(img)
 
     temp(x) = modify(RingTemplate(RadialGaussian(x.σ/x.r0), AzimuthalCosine(x.s, x.ξ .- x.ξτ)),
@@ -214,5 +211,5 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div) wh
           x0 = x0, y0 = y0,
         #   σg = μas2rad(40.0), xg = 0.0, yg = 0.0, fg = 0.2,
           f0=1e-5)
-    return _optimize(bh, temp, lower, upper, p0; maxiters=10_000)
+    return _optimize(bh, temp, lower, upper, p0, maxiters)
 end

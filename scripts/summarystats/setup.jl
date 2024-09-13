@@ -14,6 +14,7 @@ using DelimitedFiles
 Pkg.develop(name="VLBIImagingSummaryStats")
 Pkg.instantiate()
 Pkg.precompile()
+Pkg.update()
 
 @info "Testing whether we can import `VLBIImagingSummaryStats`"
 using VLBIImagingSummaryStats
