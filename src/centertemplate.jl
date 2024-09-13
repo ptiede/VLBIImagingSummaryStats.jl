@@ -41,6 +41,14 @@ function center_template(img, template::Type;
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
+function center_template(img::IntensityMap{<:StokesParams}, template::Type;
+                         grid = axisdims(img), 
+                         div = Bhattacharyya, 
+                         maxiters = 10_000)
+    _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, maxiters)
+    return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
+end
+
 function _optimize(div, func, lower, upper, p0; maxiters = 8_000)
     prob = VIDAProblem(div, func, lower, upper)
     xopt, θopt, dmin = vida(prob, ECA(;options=Options(f_calls_limit = maxiters, f_tol = 1e-5)); init_params=p0)
