@@ -15,6 +15,7 @@ Pkg.develop(name="VLBIImagingSummaryStats")
 Pkg.instantiate()
 Pkg.precompile()
 Pkg.update()
+Pkg.add(;name="Comrade", rev="ptiede-enzymeswitch")
 
 @info "Testing whether we can import `VLBIImagingSummaryStats`"
 using VLBIImagingSummaryStats
