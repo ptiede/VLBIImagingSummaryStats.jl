@@ -10,8 +10,9 @@ using Pkg; Pkg.activate(@__DIR__)
 using Distributed
 using DelimitedFiles
 
-
-Pkg.develop(name="VLBIImagingSummaryStats")
+Pkg.rm("VLBIImagingSummaryStats") #Remove the package if it is in the project otherwise you will get an error
+Pkg.rm("Comrade")
+Pkg.develop(name="VLBIImagingSummaryStats", path="../../")
 Pkg.instantiate()
 Pkg.precompile()
 Pkg.add(;name="Comrade", rev="ptiede-enzymeswitch")
