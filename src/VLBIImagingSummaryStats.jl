@@ -4,7 +4,7 @@ export center_template, match_center_and_res,
        lpmodes, cpmodes, mnet, vnet, mavg, vavg,
        summary_ringparams, load_image
 
-using Comrade
+using VLBISkyModels
 using CSV
 using DataFrames
 using NamedTupleTools

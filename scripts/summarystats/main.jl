@@ -15,9 +15,9 @@ using Comonicon
 using VLBIImagingSummaryStats
 using DataFrames
 using CSV
-using Comrade
+using VLBISkyModels
 @everywhere begin
-    using Comrade
+    using VLBISkyModels
     using VLBIImagingSummaryStats
 end
 
@@ -86,11 +86,11 @@ Extract summary statistics from a set of images.
             img = center_image(load_image(f; polarization=true))
 
             if blur > 0.0
-                img = Comrade.smooth(img, μas2rad(blur)/(2*sqrt(2*log(2))))
+                img = smooth(img, μas2rad(blur)/(2*sqrt(2*log(2))))
             end
 
             if regrid
-                rimg = Comrade.regrid(img, g)
+                rimg = regrid(img, g)
             else
                 rimg = img
             end

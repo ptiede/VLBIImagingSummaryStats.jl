@@ -10,12 +10,6 @@ using Pkg; Pkg.activate(@__DIR__)
 using Distributed
 using DelimitedFiles
 
-try
-    Pkg.rm("Comrade")
-catch e
-
-end
-
 try 
     Pkg.rm("VLBIImagingSummaryStats")
 catch e
@@ -28,11 +22,9 @@ if isfile(joinpath(@__DIR__, "Manifest.toml"))
 end
 
 # Pkg.rm("VLBIImagingSummaryStats") #Remove the package if it is in the project otherwise you will get an error
-# Pkg.rm("Comrade")
 Pkg.develop(name="VLBIImagingSummaryStats", url="https://github.com/ptiede/VLBIImagingSummaryStats.jl")
 Pkg.instantiate()
 Pkg.precompile()
-Pkg.add(;name="Comrade", rev="ptiede-enzymeswitch")
 
 @info "Testing whether we can import `VLBIImagingSummaryStats`"
 using VLBIImagingSummaryStats

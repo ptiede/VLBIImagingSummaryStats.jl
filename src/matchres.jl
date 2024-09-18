@@ -19,7 +19,7 @@ function match_center_and_res(target::IntensityMap{<:StokesParams}, input::Inten
     target_I = stokes(target, :I)
     input_I = stokes(input, :I)
     _, xopt = match_center_and_res(target_I, input_I)
-    return Comrade.smooth(shifted(input, xopt.x, xopt.y), xopt.σ), xopt
+    return smooth(shifted(input, xopt.x, xopt.y), xopt.σ), xopt
 end
 
 function match_center_and_res(target::IntensityMap, input::IntensityMap)
@@ -36,5 +36,5 @@ function match_center_and_res(target::IntensityMap, input::IntensityMap)
 
     prob = VIDAProblem(div, f, lower, upper)
     xopt, θopt, divmin = vida(prob, ECA(;options=Options(f_calls_limit = 2000, f_tol = 1e-5)); init_params=p0, maxiters=800)
-    return Comrade.smooth(shifted(input, xopt.x, xopt.y), xopt.σ), xopt
+    return smooth(shifted(input, xopt.x, xopt.y), xopt.σ), xopt
 end

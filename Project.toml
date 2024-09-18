@@ -5,11 +5,11 @@ version = "0.1.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-Comrade = "99d987ce-9a1e-4df8-bc0b-1ea019aa547b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 NamedTupleTools = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
 OptimizationMetaheuristics = "3aafef2f-86ae-4776-b337-85a36adf0b55"
 VIDA = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
+VLBISkyModels = "d6343c73-7174-4e0f-bb64-562643efbeca"
 
 [compat]
 julia = "1.10"
