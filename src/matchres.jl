@@ -36,7 +36,7 @@ function match_center_and_res(target::IntensityMap, input::IntensityMap)
         end
     end
     div = NxCorr(timg)
-    lower = (x=-μas2rad(20.0), y=-μas2rad(20.0), σ=μas2rad(1.0))
+    lower = (x=-μas2rad(20.0), y=-μas2rad(20.0), σ=μas2rad(1e-2))
     upper = (x=μas2rad(20.0), y=μas2rad(20.0), σ=μas2rad(30.0))
     p0 = (x=0.0, y=0.0, σ=μas2rad(10.0))
 
