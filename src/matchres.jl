@@ -23,7 +23,7 @@ function match_center_and_res(target::IntensityMap{<:StokesParams}, input::Inten
 end
 
 function match_center_and_res(target::IntensityMap, input::IntensityMap)
-    cache = create_cache(FFTAlg(), input)
+    cache = VLBISkyModels.create_cache(FFTAlg(), input)
     f = let cimg=VLBISkyModels.InterpolatedImage(input, cache)
         function f(x)
             return smoothed(shifted(cimg, x.x, x.y), x.σ)
