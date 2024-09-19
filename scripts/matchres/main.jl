@@ -58,7 +58,7 @@ Extract summary statistics from a set of images.
 
     mkpath(outdir)
 
-    g = imagepixels(μas2rad(250.0), μas2rad(250.0), 125, 125)
+    g = imagepixels(μas2rad(150.0), μas2rad(150.0), 64, 64)
 
     # Flip this because by default we want to regrid
     regrid = !regrid
