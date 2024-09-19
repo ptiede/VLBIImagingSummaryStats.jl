@@ -15,26 +15,32 @@ find the optimal shift and blurring to match the two images based on the NXCORR 
     - `img`: The shifted and blurred image.
     - `xopt`: The optimal shift and blurring parameters as a NamedTuple with fields `x`, `y`, and `σ`.
 """
-function match_center_and_res(target::IntensityMap{<:StokesParams}, input::IntensityMap{<:StokesParams})
-    target_I = stokes(target, :I)
-    input_I = stokes(input, :I)
-    _, xopt = match_center_and_res(target_I, input_I)
-    return smooth(shifted(input, xopt.x, xopt.y), xopt.σ), xopt
-end
-
 function match_center_and_res(target::IntensityMap, input::IntensityMap)
-    cache = VLBISkyModels.create_cache(FFTAlg(), input)
-    f = let cimg=VLBISkyModels.InterpolatedImage(input, cache)
+
+    if eltype(target) <: StokesParams
+        timg = stokes(target, :I)
+    else
+        timg = target
+    end
+
+    if eltype(input) <: StokesParams
+        iimg = stokes(input, :I)
+    else
+        iimg = input
+    end
+
+
+    f = let cimg=VLBISkyModels.InterpolatedImage(iimg)
         function f(x)
             return smoothed(shifted(cimg, x.x, x.y), x.σ)
         end
     end
-    div = NxCorr(target)
+    div = NxCorr(timg)
     lower = (x=-μas2rad(20.0), y=-μas2rad(20.0), σ=μas2rad(1.0))
     upper = (x=μas2rad(20.0), y=μas2rad(20.0), σ=μas2rad(30.0))
     p0 = (x=0.0, y=0.0, σ=μas2rad(10.0))
 
     prob = VIDAProblem(div, f, lower, upper)
-    xopt, θopt, divmin = vida(prob, ECA(;options=Options(f_calls_limit = 2000, f_tol = 1e-5)); init_params=p0, maxiters=800)
+    xopt, θopt, divmin = vida(prob, ECA(;options=Options(f_calls_limit = 8000, f_tol = 1e-5)); init_params=p0, maxiters=8000)
     return smooth(shifted(input, xopt.x, xopt.y), xopt.σ), xopt
 end
