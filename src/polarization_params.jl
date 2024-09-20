@@ -133,3 +133,11 @@ field of view. To make comparissons with data you should first debias this resul
 on synthetic data tests.
 """
 vavg(img::AbstractArray{<:StokesParams}) = sum(abs.(stokes(img, :V)))/sum(stokes(img, :I))
+
+
+"""
+    netevpa(img::IntensityMap{<:StokesParams})
+
+Computes the image integrated EVPA, which we define as the `evpa(mean(img))`
+"""
+netevpa(img::AbstractArray{<:StokesParams}) = evpa(mean(img))

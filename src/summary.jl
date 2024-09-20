@@ -34,7 +34,9 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
     n_imcp = Tuple((Symbol("im_betacp", "_$n") for n in cpmode))
     imag_betacp = NamedTuple{n_imcp}(map(imag, βcp))
 
-    return merge(xopt, (;m_net, m_avg), real_betalp, imag_betalp, (;v_net, v_avg), real_betacp, imag_betacp)
+    nevpa = netevpa(img)
+
+    return merge(xopt, (;evpa=nevpa), (;m_net, m_avg), real_betalp, imag_betalp, (;v_net, v_avg), real_betacp, imag_betacp)
 end
 
 function summary_ringparams(img::IntensityMap{<:Real};

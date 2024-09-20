@@ -2,7 +2,7 @@ module VLBIImagingSummaryStats
 
 export center_template, match_center_and_res,
        lpmodes, cpmodes, mnet, vnet, mavg, vavg,
-       summary_ringparams, load_image
+       netevpa, summary_ringparams, load_image
 
 using VLBISkyModels
 using CSV
