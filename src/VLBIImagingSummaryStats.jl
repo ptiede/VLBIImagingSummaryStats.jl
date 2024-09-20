@@ -10,6 +10,7 @@ using DataFrames
 using NamedTupleTools
 using VIDA
 using OptimizationMetaheuristics: OptimizationMetaheuristics, ECA, Options
+using Statistics
 
 include("centertemplate.jl")
 include("matchres.jl")
