@@ -61,7 +61,7 @@ function _center_template(img::IntensityMap, ::Type{<:Disk}, div, maxiters)
 
     x0, y0 = centroid(img)
 
-    temp(x) = modify(GaussDisk(x.σ/x.r0), Stretch(x.r0, x.r0*(1+x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0))  +
+    temp(x) = modify(VLBISkyModels.GaussDisk(x.σ/x.r0), Stretch(x.r0, x.r0*(1+x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0))  +
               x.f0*VLBISkyModels.Constant(fieldofview(img).X)
     lower = (r0 = μas2rad(15.0), σ = μas2rad(1.0),
              τ  = 0.001, ξτ = 0.0,
