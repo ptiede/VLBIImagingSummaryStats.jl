@@ -1,7 +1,7 @@
 @doc raw"""
     center_template(img::IntensityMap template::Type; 
                     grid=axisdims(img), 
-                    div=Bhattacharyya,
+                    div=LeastSquares,
                     maxiters=10_000)
 
 Recenter an image based on some template model `template`. The set of implemented templates are:
@@ -23,7 +23,7 @@ Parameter meaning:
  - `img::IntensityMap`: The image to recenter.
  - `template::Type`: The template model to use.
  - `grid`: The grid to use for the template matching. Default is the image grid, but smaller grids can be used to speed up the optimization.
- - `div::Function=Bhattacharyya`: The divergence to use for the optimization function.
+ - `div::Function=LeastSquares`: The divergence to use for the optimization function.
  - `maxiters::Int=10_000`: The maximum number of iterations to use when optimizing for the ring center.
 
 ## Returns:
@@ -34,7 +34,7 @@ Parameter meaning:
 """
 function center_template(img, template::Type;
                          grid = axisdims(img), 
-                         div = Bhattacharyya, 
+                         div = LeastSquares, 
                          maxiters = 10_000)
     rimg = regrid(img, grid)
     xopt, θopt = _center_template(rimg, template, div, maxiters)
@@ -43,7 +43,7 @@ end
 
 function center_template(img::IntensityMap{<:StokesParams}, template::Type;
                          grid = axisdims(img), 
-                         div = Bhattacharyya, 
+                         div = LeastSquares, 
                          maxiters = 10_000)
     _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, maxiters)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
@@ -63,7 +63,7 @@ function _center_template(img::IntensityMap, ::Type{<:Disk}, div, maxiters)
 
     temp(x) = modify(VLBISkyModels.GaussDisk(x.σ/x.r0), Stretch(x.r0, x.r0*(1+x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0))  +
               x.f0*VLBISkyModels.Constant(fieldofview(img).X)
-    lower = (r0 = μas2rad(15.0), σ = μas2rad(1.0),
+    lower = (r0 = μas2rad(10.0), σ = μas2rad(1.0),
              τ  = 0.001, ξτ = 0.0,
              x0 = -μas2rad(15.0), y0 = -μas2rad(15.0),
              f0 = 1e-6
@@ -179,7 +179,7 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
                      Stretch(x.r0, x.r0*(1+x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0))+
             #   modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
               x.f0*VLBISkyModels.Constant(fieldofview(img).X)
-    lower = (r0 = μas2rad(16.0), σ = μas2rad(0.5),
+    lower = (r0 = μas2rad(10.0), σ = μas2rad(0.5),
              s = ntuple(_->0.001, N),
              ξ = ntuple(_->0.0, N),
              τ = 0.0,
@@ -203,7 +203,7 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
             #  fg = 20.0,
              f0=10.0
              )
-    p0 = (r0 = μas2rad(24.0), σ = μas2rad(4.0),
+    p0 = (r0 = μas2rad(16.0), σ = μas2rad(4.0),
           s = ntuple(_->0.2, N),
           ξ = ntuple(_->1π, N),
           τ = 0.01,

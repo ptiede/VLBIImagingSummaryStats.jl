@@ -41,7 +41,7 @@ end
 
 function summary_ringparams(img::IntensityMap{<:Real};
                             lpmodes=(2,), cpmodes=(1,),
-                            order=1, maxiters=1000, cfluxdiam=μas2rad(60.0))
+                            order=1, maxiters=1000, cfluxdiam=μas2rad(80.0))
     rimg = regrid(img, imagepixels(μas2rad(120.0), μas2rad(120.0), 32, 32))
     _, xopt, _ = center_template(rimg, MRing{order}; maxiters)
     radx = cfluxdiam/2 + xopt.x0
