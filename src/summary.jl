@@ -11,8 +11,12 @@ beta modes given by `lpmode` and `cpmode` respectively, as well as `mnet` and `v
 function summary_ringparams(img::IntensityMap{<:StokesParams};
                             lpmode=(1, 2,), cpmode=(1,),
                             order=1, maxiters=1000,
-                            cfluxdiam = μas2rad(60.0))
+                            cfluxdiam = μas2rad(80.0))
     xopt = summary_ringparams(stokes(img, :I); order, maxiters, cfluxdiam)
+    radx = cfluxdiam/2 + xopt.x0
+    rady = cfluxdiam/2 + xopt.y0
+    cflux = flux(img[X=-radx..radx, Y=-rady..rady])
+
     simg = shifted(img, -xopt.x0, -xopt.y0)
     m_net = mnet(simg)
     v_net = vnet(simg)
@@ -36,7 +40,7 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
 
     nevpa = netevpa(img)
 
-    return merge(xopt, (;evpa=nevpa), (;m_net, m_avg), real_betalp, imag_betalp, (;v_net, v_avg), real_betacp, imag_betacp)
+    return merge(xopt, (;Qtot = cflux.Q, Utot = cflux.U, Vtot, cflux.V), (;evpa=nevpa), (;m_net, m_avg), real_betalp, imag_betalp, (;v_net, v_avg), real_betacp, imag_betacp)
 end
 
 function summary_ringparams(img::IntensityMap{<:Real};
@@ -47,7 +51,7 @@ function summary_ringparams(img::IntensityMap{<:Real};
     radx = cfluxdiam/2 + xopt.x0
     rady = cfluxdiam/2 + xopt.y0
     cflux = flux(img[X=-radx..radx, Y=-rady..rady])
-    return merge(_flatten_tuple(xopt), (;cflux=cflux))
+    return merge(_flatten_tuple(xopt), (;Itot=cflux))
 end
 
 function _flatten_tuple(nt::NamedTuple)
