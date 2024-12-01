@@ -1,7 +1,7 @@
 @doc raw"""
     center_template(img::IntensityMap template::Type; 
                     grid=axisdims(img), 
-                    div=NXCorr,
+                    div=NxCorr,
                     maxiters=10_000)
 
 Recenter an image based on some template model `template`. The set of implemented templates are:
@@ -23,7 +23,7 @@ Parameter meaning:
  - `img::IntensityMap`: The image to recenter.
  - `template::Type`: The template model to use.
  - `grid`: The grid to use for the template matching. Default is the image grid, but smaller grids can be used to speed up the optimization.
- - `div::Function=NXCorr`: The divergence to use for the optimization function.
+ - `div::Function=NxCorr`: The divergence to use for the optimization function.
  - `maxiters::Int=10_000`: The maximum number of iterations to use when optimizing for the ring center.
 
 ## Returns:
@@ -34,7 +34,7 @@ Parameter meaning:
 """
 function center_template(img, template::Type;
                          grid = axisdims(img), 
-                         div = NXCorr, 
+                         div = NxCorr, 
                          maxiters = 10_000)
     rimg = regrid(img, grid)
     xopt, θopt = _center_template(rimg, template, div, maxiters)
@@ -43,7 +43,7 @@ end
 
 function center_template(img::IntensityMap{<:StokesParams}, template::Type;
                          grid = axisdims(img), 
-                         div = NXCorr, 
+                         div = NxCorr, 
                          maxiters = 10_000)
     _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, maxiters)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
