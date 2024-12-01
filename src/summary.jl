@@ -40,7 +40,7 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
 
     nevpa = netevpa(img)
 
-    return merge(xopt, (;Qtot = cflux.Q, Utot = cflux.U, Vtot, cflux.V), (;evpa=nevpa), (;m_net, m_avg), real_betalp, imag_betalp, (;v_net, v_avg), real_betacp, imag_betacp)
+    return merge(xopt, (;Qtot = cflux.Q, Utot = cflux.U, Vtot=cflux.V), (;evpa=nevpa), (;m_net, m_avg), real_betalp, imag_betalp, (;v_net, v_avg), real_betacp, imag_betacp)
 end
 
 function summary_ringparams(img::IntensityMap{<:Real};
