@@ -130,39 +130,37 @@ function _center_template(img::IntensityMap, ::Type{<:Gaussian}, div, maxiters)
 
     x0, y0 = centroid(img)
     Gauss(σ, x, y) = modify(Gaussian(), Stretch(σ), Shift(x, y))
+    fovx, fovy = fieldofview(img)
 
     temp(x) = Gauss(x.σ1, x.x0, x.y0) +
               x.f2*Gauss(x.σ2, x.x1, x.y1) +
               x.f0*VLBISkyModels.Constant(fieldofview(img).X)
     lower = (
-             σ1 = μas2rad(1.0), x0 = -μas2rad(40.0), y0 = -μas2rad(40.0),
-             σ2 = μas2rad(1.0), x1 = -μas2rad(40.0), y1 = -μas2rad(40.0),
+             σ1 = 2*min(pixelsizes(img)...), 
+             x0 = -fovx/2, y0 = -fovy/2,
+             σ2 = 2*min(pixelsizes(img)...), 
+             x1 = -fovx/2, y1 = -fovy/2,
              f2 = 0.0,
             f0 = 1e-6
              )
     upper = (
-             σ1 = μas2rad(15.0), x0 = μas2rad(40.0), y0 = μas2rad(40.0),
-             σ2 = μas2rad(15.0), x1 = μas2rad(40.0), y1 = μas2rad(40.0),
+             σ1 = max(fovx, fovy)/3, 
+             x0 = fovx/2, y0 = fovy/2,
+             σ2 = max(fovx, fovy)/3, 
+             x1 = fovx/2, y1 = fovy/2,
              f2 = 6.0,
              f0=10.0
              )
     p0 = (
-            σ1 = μas2rad(5.0), x0 = μas2rad(0.0), y0 = μas2rad(0.0),
-            σ2 = μas2rad(5.0), x1 = -μas2rad(10.0), y1 = μas2rad(10.0),
+            σ1 = (upper.σ1+lower.σ1)/2, 
+            x0 = x0, y0 = y0,
+            σ2 = (upper.σ2+lower.σ2)/2, 
+            x1 = x0, y1 = y0,
             f2 = 0.5,
-            # σg = μas2rad(40.0), xg = 0.0, yg = 0.0, fg = 0.2,
             f0=1e-3
         )
     xopt, θopt = _optimize(bh, temp, lower, upper, p0, maxiters)
     flip = xopt.x0 < xopt.x1
-    # Find the center of light
-    # shiftx = (xopt.f2*xopt.x1 + xopt.x0)/(xopt.f2 + 1)
-    # shifty = (xopt.f2*xopt.y1 + xopt.y0)/(xopt.f2 + 1)
-    # Reset so that the center of light is at the origin
-    # @reset xopt.x0 =  shiftx
-    # @reset xopt.y0 =  shifty
-    # @reset xopt.x1 = xopt.x1 - xopt.x0 + shiftx
-    # @reset xopt.y1 = xopt.y1 - xopt.y0 + shifty
     if flip
         return (; σ1 = xopt.σ2, x0 = xopt.x1, y0 = xopt.y1,
                   σ2 = xopt.σ1, x1 = xopt.x0, y1 = xopt.y0,
@@ -184,7 +182,7 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
              ξ = ntuple(_->0.0, N),
              τ = 0.0,
              ξτ = 0.0,
-             x0 = -μas2rad(35.0), y0 = -μas2rad(35.0),
+             x0 = -μas2rad(50.0), y0 = -μas2rad(50.0),
             #  σg = μas2rad(30.0),
             #  xg = -fieldofview(img).X/4,
             #  yg = -fieldofview(img).Y/4,
@@ -196,7 +194,7 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
              ξ = ntuple(_->2π, N),
              τ = 1.0,
              ξτ = 1π,
-             x0 = μas2rad(35.0), y0 = μas2rad(35.0),
+             x0 = μas2rad(50.0), y0 = μas2rad(50.0),
             #  σg = fieldofview(img).X/2,
             #  xg = fieldofview(img).X/4,
             #  yg = fieldofview(img).Y/4,
