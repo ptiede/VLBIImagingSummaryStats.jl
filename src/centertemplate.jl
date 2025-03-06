@@ -1,7 +1,7 @@
 @doc raw"""
     center_template(img::IntensityMap template::Type; 
                     grid=axisdims(img), 
-                    div=NxCorr,
+                    div=LeastSquares,
                     maxiters=10_000)
 
 Recenter an image based on some template model `template`. The set of implemented templates are:
@@ -23,7 +23,7 @@ Parameter meaning:
  - `img::IntensityMap`: The image to recenter.
  - `template::Type`: The template model to use.
  - `grid`: The grid to use for the template matching. Default is the image grid, but smaller grids can be used to speed up the optimization.
- - `div::Function=NxCorr`: The divergence to use for the optimization function.
+ - `div::Function=LeastSquares`: The divergence to use for the optimization function.
  - `maxiters::Int=10_000`: The maximum number of iterations to use when optimizing for the ring center.
 
 ## Returns:
@@ -34,7 +34,7 @@ Parameter meaning:
 """
 function center_template(img, template::Type;
                          grid = axisdims(img), 
-                         div = NxCorr, 
+                         div = LeastSquares, 
                          maxiters = 10_000)
     rimg = regrid(img, grid)
     xopt, θopt = _center_template(rimg, template, div, maxiters)
@@ -43,7 +43,7 @@ end
 
 function center_template(img::IntensityMap{<:StokesParams}, template::Type;
                          grid = axisdims(img), 
-                         div = NxCorr, 
+                         div = LeastSquares, 
                          maxiters = 10_000)
     _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, maxiters)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
@@ -182,7 +182,7 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
              ξ = ntuple(_->0.0, N),
              τ = 0.0,
              ξτ = 0.0,
-             x0 = -μas2rad(50.0), y0 = -μas2rad(50.0),
+             x0 = -μas2rad(15.0), y0 = -μas2rad(15.0),
             #  σg = μas2rad(30.0),
             #  xg = -fieldofview(img).X/4,
             #  yg = -fieldofview(img).Y/4,
@@ -194,7 +194,7 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
              ξ = ntuple(_->2π, N),
              τ = 1.0,
              ξτ = 1π,
-             x0 = μas2rad(50.0), y0 = μas2rad(50.0),
+             x0 = μas2rad(15.0), y0 = μas2rad(15.0),
             #  σg = fieldofview(img).X/2,
             #  xg = fieldofview(img).X/4,
             #  yg = fieldofview(img).Y/4,
