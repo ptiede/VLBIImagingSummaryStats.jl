@@ -49,8 +49,8 @@ function summary_ringparams(img::IntensityMap{<:Real};
                             order=3, maxiters=20_000,
                             divergence=LeastSquares, 
                             cfluxdiam=μas2rad(80.0))
-    rimg = regrid(img, imagepixels(μas2rad(120.0), μas2rad(120.0), 48, 48))
-    _, xopt, _ = center_template(rimg, MRing{order}; maxiters, div=divergence)
+    g = imagepixels(μas2rad(120.0), μas2rad(120.0), 48, 48)
+    _, xopt, _ = center_template(rimg, MRing{order}; maxiters, grid=g, div=divergence)
     radx = cfluxdiam/2 + xopt.x0
     rady = cfluxdiam/2 + xopt.y0
     cflux = flux(img[X=-radx..radx, Y=-rady..rady])

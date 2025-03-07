@@ -15,7 +15,8 @@ find the optimal shift and blurring to match the two images based on the NXCORR 
     - `img`: The shifted and blurred image.
     - `xopt`: The optimal shift and blurring parameters as a NamedTuple with fields `x`, `y`, and `σ`.
 """
-function match_center_and_res(target::IntensityMap, input::IntensityMap; divergence=NxCorr, maxiters=8000)
+function match_center_and_res(target::IntensityMap, input::IntensityMap; divergence=NxCorr, 
+                              grid=nothing, maxiters=8000)
 
     if eltype(target) <: StokesParams
         timg = stokes(target, :I)
@@ -29,13 +30,19 @@ function match_center_and_res(target::IntensityMap, input::IntensityMap; diverge
         iimg = input
     end
 
+    if !isnothing(grid)
+        rtimg = regrid(timg, grid)
+    else
+        rtimg = timg
+    end
+
 
     f = let cimg=VLBISkyModels.InterpolatedImage(iimg)
         function f(x)
             return smoothed(shifted(cimg, x.x, x.y), x.σ)
         end
     end
-    div = divergence(max.(timg, 0.0))
+    div = divergence(max.(rtimg, 0.0))
     lower = (x=-μas2rad(20.0), y=-μas2rad(20.0), σ=μas2rad(1e-2))
     upper = (x=μas2rad(20.0), y=μas2rad(20.0), σ=μas2rad(30.0))
     p0 = (x=0.0, y=0.0, σ=μas2rad(10.0))
@@ -44,5 +51,6 @@ function match_center_and_res(target::IntensityMap, input::IntensityMap; diverge
     xopt, θopt, divmin = vida(prob, ECA(;options=Options(f_calls_limit = 8000, f_tol = 1e-5)); 
                               init_params=p0, maxiters
                               )
-    return smooth(shifted(input, xopt.x, xopt.y), xopt.σ), xopt
+    # Smooth and then shift to prevent interpolation error
+    return shifted(smooth(input, xopt.σ), xopt.x, xopt.y), xopt
 end

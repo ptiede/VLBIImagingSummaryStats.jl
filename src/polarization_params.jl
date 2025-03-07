@@ -141,3 +141,59 @@ vavg(img::AbstractArray{<:StokesParams}) = sum(abs.(stokes(img, :V)))/sum(stokes
 Computes the image integrated EVPA, which we define as the `evpa(mean(img))`
 """
 netevpa(img::AbstractArray{<:StokesParams}) = evpa(mean(img))
+
+
+"""
+    polnxcorr(x::IntensityMap{<:StokesParams}, y::IntensityMap{<:StokesParams})
+
+Computes the polarization normalized cross-correlation of two images. This returns a named tuple
+with fields `LP` and `V` which are the normalized cross-correlation of the linear polarization
+and circular polarization.
+"""
+function polnxcorr(x::IntensityMap{<:StokesParams{T}}, y::IntensityMap{<:StokesParams}) where {T}
+    sp = zero(Complex{T})
+    sv = zero(T)
+    nx = zero(T)
+    ny = zero(T)
+    nvx= zero(T)
+    nvy= zero(T)
+    for I in eachindex(x, y)
+        xx = x[I]
+        yy = y[I]
+        lpx = linearpol(xx)
+        lpy = linearpol(yy)
+        sp += lpx*conj(lpy)
+        nx += abs2(lpx)
+        ny += abs2(lpy)
+        sv += xx.V*yy.V
+        nvx += abs2(xx.V)
+        nvy += abs2(yy.V)
+    end
+    return (LP = real(sp)*inv(sqrt(nx*ny)),  V =sv*inv(sqrt(nvx*nvy)))
+end
+
+"""
+    nxcorr(x::IntensityMap{<:StokesParams}, y::IntensityMap{<:StokesParams})
+
+Computes the polarized normalized cross-correlation of two images. This returns a named tuple
+with fields `I`, `LP` and `V` which are the normalized cross-correlation of the total intensity,
+linear polarization and circular polarization.
+
+The linear polarization NxCorr is defined as 
+
+    LP(P1, P2) = real(<P1, P2>) / sqrt(<P1, P1> <P2, P2>)
+
+where <P1, P2> is the dot product of the complex linear polarization vectors.
+
+The circular polarization nxcorr of two circular polarization maps V1, V2 is defined as 
+
+    V(V1, V2) =  <V1,V2>/ sqrt(<V1,V1> <V2,V2>)
+
+where <V1V2> is the dot product of the circular polarization vectors.
+
+"""
+function VIDA.nxcorr(x::IntensityMap{<:StokesParams}, y::IntensityMap{<:StokesParams}) 
+    nI = nxcorr(stokes(x, :I), stokes(y, :I))
+    nP = polnxcorr(x, y)
+    return merge((I=nI,), nP)
+end
