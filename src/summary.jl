@@ -18,7 +18,8 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
     rady = cfluxdiam/2 + xopt.y0
     cflux = flux(img[X=-radx..radx, Y=-rady..rady])
 
-    simg = shifted(img, -xopt.x0, -xopt.y0)
+    # Now compute the parameters on the shifted and centered image
+    simg = img[X=-radx..radx, Y=-rady..rady]
     m_net = mnet(simg)
     v_net = vnet(simg)
 
