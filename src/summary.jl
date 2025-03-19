@@ -11,8 +11,8 @@ beta modes given by `lpmode` and `cpmode` respectively, as well as `mnet` and `v
 function summary_ringparams(img::IntensityMap{<:StokesParams};
                             lpmode=(1, 2,), cpmode=(1,),
                             order=1, maxiters=1000,
-                            cfluxdiam = μas2rad(80.0))
-    xopt = summary_ringparams(stokes(img, :I); order, maxiters, cfluxdiam)
+                            cfluxdiam = μas2rad(80.0), divergence=NxCorr)
+    xopt = summary_ringparams(stokes(img, :I); order, maxiters, cfluxdiam, divergence)
     radx = cfluxdiam/2 + xopt.x0
     rady = cfluxdiam/2 + xopt.y0
     cflux = flux(img[X=-radx..radx, Y=-rady..rady])
@@ -45,9 +45,10 @@ end
 
 function summary_ringparams(img::IntensityMap{<:Real};
                             lpmodes=(2,), cpmodes=(1,),
-                            order=1, maxiters=1000, cfluxdiam=μas2rad(80.0))
-    rimg = regrid(img, imagepixels(μas2rad(120.0), μas2rad(120.0), 32, 32))
-    _, xopt, _ = center_template(rimg, MRing{order}; maxiters)
+                            order=1, maxiters=1000, cfluxdiam=μas2rad(80.0),
+                            divergence=LeastSquares)
+    rimg = regrid(img, imagepixels(μas2rad(120.0), μas2rad(120.0), 48, 48))
+    _, xopt, _ = center_template(rimg, MRing{order}; maxiters, div=LeastSquares)
     radx = cfluxdiam/2 + xopt.x0
     rady = cfluxdiam/2 + xopt.y0
     cflux = flux(img[X=-radx..radx, Y=-rady..rady])

@@ -182,7 +182,7 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
              ξ = ntuple(_->0.0, N),
              τ = 0.0,
              ξτ = 0.0,
-             x0 = -μas2rad(50.0), y0 = -μas2rad(50.0),
+             x0 = -μas2rad(20.0), y0 = -μas2rad(20.0),
             #  σg = μas2rad(30.0),
             #  xg = -fieldofview(img).X/4,
             #  yg = -fieldofview(img).Y/4,
@@ -194,7 +194,7 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
              ξ = ntuple(_->2π, N),
              τ = 1.0,
              ξτ = 1π,
-             x0 = μas2rad(50.0), y0 = μas2rad(50.0),
+             x0 = μas2rad(20.0), y0 = μas2rad(20.0),
             #  σg = fieldofview(img).X/2,
             #  xg = fieldofview(img).X/4,
             #  yg = fieldofview(img).Y/4,
@@ -208,6 +208,6 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
           ξτ = 0.5π,
           x0 = x0, y0 = y0,
         #   σg = μas2rad(40.0), xg = 0.0, yg = 0.0, fg = 0.2,
-          f0=1e-5)
+          f0=0.1)
     return _optimize(bh, temp, lower, upper, p0, maxiters)
 end
