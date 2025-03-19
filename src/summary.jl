@@ -10,14 +10,16 @@ beta modes given by `lpmode` and `cpmode` respectively, as well as `mnet` and `v
 """
 function summary_ringparams(img::IntensityMap{<:StokesParams};
                             lpmode=(1, 2,), cpmode=(1,),
-                            order=1, maxiters=1000,
-                            cfluxdiam = μas2rad(80.0), divergence=NxCorr)
+                            order=3, maxiters=20_000, 
+                            divergence=LeastSquares,
+                            cfluxdiam = μas2rad(80.0))
     xopt = summary_ringparams(stokes(img, :I); order, maxiters, cfluxdiam, divergence)
     radx = cfluxdiam/2 + xopt.x0
     rady = cfluxdiam/2 + xopt.y0
     cflux = flux(img[X=-radx..radx, Y=-rady..rady])
 
-    simg = shifted(img, -xopt.x0, -xopt.y0)
+    # Now compute the parameters on the shifted and centered image
+    simg = img[X=-radx..radx, Y=-rady..rady]
     m_net = mnet(simg)
     v_net = vnet(simg)
 
@@ -45,10 +47,11 @@ end
 
 function summary_ringparams(img::IntensityMap{<:Real};
                             lpmodes=(2,), cpmodes=(1,),
-                            order=1, maxiters=1000, cfluxdiam=μas2rad(80.0),
-                            divergence=LeastSquares)
-    rimg = regrid(img, imagepixels(μas2rad(120.0), μas2rad(120.0), 48, 48))
-    _, xopt, _ = center_template(rimg, MRing{order}; maxiters, div=LeastSquares)
+                            order=3, maxiters=20_000,
+                            divergence=LeastSquares, 
+                            cfluxdiam=μas2rad(80.0))
+    g = imagepixels(μas2rad(120.0), μas2rad(120.0), 48, 48)
+    _, xopt, _ = center_template(img, MRing{order}; maxiters, grid=g, div=divergence)
     radx = cfluxdiam/2 + xopt.x0
     rady = cfluxdiam/2 + xopt.y0
     cflux = flux(img[X=-radx..radx, Y=-rady..rady])
