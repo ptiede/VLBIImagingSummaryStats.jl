@@ -53,7 +53,7 @@ function _optimize(div, func, lower, upper, p0, maxiters = 8_000)
     prob = VIDAProblem(div, func, lower, upper)
     xopt, θopt, dmin = vida(prob, ECA(;options=Options(f_calls_limit = maxiters, f_tol = 1e-5)); init_params=p0)
     # @info dmin
-    return xopt, θopt
+    return merge(xopt, (;divmin=dmin)), θopt
 end
 
 function _center_template(img::IntensityMap, ::Type{<:Disk}, div, maxiters)

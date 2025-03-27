@@ -48,7 +48,7 @@ function match_center_and_res(target::IntensityMap, input::IntensityMap; diverge
     p0 = (x=0.0, y=0.0, σ=μas2rad(10.0))
 
     prob = VIDAProblem(div, f, lower, upper)
-    xopt, θopt, divmin = vida(prob, ECA(;options=Options(f_calls_limit = 8000, f_tol = 1e-5)); 
+    xopt, θopt, divmin = vida(prob, ECA(;options=Options(f_calls_limit = maxiters, f_tol = 1e-5)); 
                               init_params=p0, maxiters
                               )
     # Smooth and then shift to prevent interpolation error

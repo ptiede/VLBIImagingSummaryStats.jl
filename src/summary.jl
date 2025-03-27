@@ -46,7 +46,7 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
 end
 
 function summary_ringparams(img::IntensityMap{<:Real};
-                            lpmodes=(2,), cpmodes=(1,),
+                            lpmode=(2,), cpmode=(1,),
                             order=3, maxiters=20_000,
                             divergence=NxCorr, 
                             cfluxdiam=μas2rad(80.0))
