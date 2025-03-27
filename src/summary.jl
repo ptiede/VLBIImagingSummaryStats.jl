@@ -12,23 +12,22 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
                             lpmode=(1, 2,), cpmode=(1,),
                             order=3, maxiters=20_000, 
                             divergence=NxCorr,
-                            grid = imagepixels(μas2rad(120.0), μas2rad(120.0), 48, 48),
+                            grid = nothing,
                             cfluxdiam = μas2rad(80.0))
     xopt = summary_ringparams(stokes(img, :I); order, grid, maxiters, cfluxdiam, divergence)
-    radx = cfluxdiam/2 + xopt.x0
-    rady = cfluxdiam/2 + xopt.y0
-    cflux = flux(img[X=-radx..radx, Y=-rady..rady])
+    rx = cfluxdiam/2
+    simg = shifted(img, -xopt.x0, -xopt.y0)[X=-rx..rx, Y=-rx..rx]
+    cflux = flux(simg)
 
     # Now compute the parameters on the shifted and centered image
-    simg = img[X=-radx..radx, Y=-rady..rady]
     m_net = mnet(simg)
     v_net = vnet(simg)
 
     m_avg = mavg(simg)
     v_avg = vavg(simg)
 
-    βlp = lpmodes(simg, lpmode)
-    βcp = cpmodes(simg, cpmode)
+    βlp = lpmodes(simg, lpmode; rmax=rx)
+    βcp = cpmodes(simg, cpmode; rmax=rx)
 
 
     n_relp = Tuple((Symbol("re_betalp", "_$n") for n in lpmode))
@@ -43,19 +42,22 @@ function summary_ringparams(img::IntensityMap{<:StokesParams};
 
     nevpa = netevpa(img)
 
-    return merge(xopt, (;Qtot = cflux.Q, Utot = cflux.U, Vtot=cflux.V), (;evpa=nevpa), (;m_net, m_avg), real_betalp, imag_betalp, (;v_net, v_avg), real_betacp, imag_betacp)
+    return merge(xopt, (;Qtot = cflux.Q, Utot = cflux.U, Vtot=cflux.V), 
+                        (;evpa=nevpa), (;m_net, m_avg), 
+                        real_betalp, imag_betalp, (;v_net, v_avg), 
+                        real_betacp, imag_betacp)
 end
 
 function summary_ringparams(img::IntensityMap{<:Real};
                             lpmode=(2,), cpmode=(1,),
                             order=3, maxiters=20_000,
                             divergence=NxCorr, 
-                            grid = imagepixels(μas2rad(120.0), μas2rad(120.0), 48, 48),
+                            grid = nothing,
                             cfluxdiam=μas2rad(80.0))
     _, xopt, _ = center_template(img, MRing{order}; maxiters, grid=grid, div=divergence)
-    radx = cfluxdiam/2 + xopt.x0
-    rady = cfluxdiam/2 + xopt.y0
-    cflux = flux(img[X=-radx..radx, Y=-rady..rady])
+    rx = cfluxdiam/2
+    simg = shifted(img, -xopt.x0, -xopt.y0)[X=-rx..rx, Y=-rx..rx]
+    cflux = flux(simg)
     return merge(_flatten_tuple(xopt), (;Itot=cflux))
 end
 

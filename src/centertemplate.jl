@@ -36,7 +36,11 @@ function center_template(img, template::Type;
                          grid = axisdims(img), 
                          div = NxCorr, 
                          maxiters = 10_000)
-    rimg = regrid(img, grid)
+    if !isnothing(grid)
+        rimg = regrid(img, grid)
+    else
+        rimg = img
+    end
     xopt, θopt = _center_template(rimg, template, div, maxiters)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
