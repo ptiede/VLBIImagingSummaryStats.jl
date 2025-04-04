@@ -3,12 +3,14 @@ using Distributed
     const filedir = @__DIR__
 end
 
-using Pkg; Pkg.activate(filedir)
+using Pkg;
+Pkg.activate(filedir);
 using Distributed
 using DelimitedFiles
 
 @everywhere begin
-    using Pkg;Pkg.activate(filedir)
+    using Pkg
+    Pkg.activate(filedir)
 end
 
 using Comonicon
@@ -17,12 +19,13 @@ using DataFrames
 using CSV
 using VLBISkyModels
 @everywhere begin
+    using VIDA
     using VLBISkyModels
     using VLBIImagingSummaryStats
 end
 
 function loaddir(file)
-    open(file) do io
+    return open(file) do io
         return readlines(io)
     end
 end
@@ -45,7 +48,7 @@ Extract summary statistics from a set of images.
 - `--restart`: Restart the extraction process from before
 - `--regrid`: Regrid the images before extracting
 """
-@main function main(imfiles::String, bimg::String, outdir::String; stride::Int=2*nworkers(), regrid::Bool=false, restart::Bool=false)
+@main function main(imfiles::String, bimg::String, outdir::String; stride::Int = 2 * nworkers(), regrid::Bool = false, restart::Bool = false)
     @info "Image files path: $(imfiles)"
     @info "Base image to match res $(bimg)"
     @info "Outputting results to $(outdir)"
@@ -58,15 +61,15 @@ Extract summary statistics from a set of images.
 
     mkpath(outdir)
 
-    g = imagepixels(μas2rad(150.0), μas2rad(150.0), 64, 64)
+    g = imagepixels(μas2rad(150.0), μas2rad(150.0), 50, 50)
 
     # Flip this because by default we want to regrid
     regrid = !regrid
 
     if regrid
-        bcimg = VLBISkyModels.regrid(load_image(bimg; polarization=false), g)
+        bcimg = VLBISkyModels.regrid(load_image(bimg; polarization = true), g)
     else
-        bcimg = load_image(bimg; polarization=false)
+        bcimg = load_image(bimg; polarization = true)
     end
 
     @info "Regridding image : $(regrid)"
@@ -77,12 +80,12 @@ Extract summary statistics from a set of images.
     else
         df = DataFrame()
     end
-    startindex = nrow(df)+1
+    startindex = nrow(df) + 1
     indexpart = Iterators.partition(startindex:length(imfs), stride)
     for ii in indexpart
         @info "Extracting from $(ii[begin]) to $(ii[end])"
         res = pmap(imfs[ii]) do f
-            img = center_image(load_image(f; polarization=true))
+            img = center_image(load_image(f; polarization = true))
 
             if regrid
                 rimg = VLBISkyModels.regrid(img, g)
@@ -90,8 +93,12 @@ Extract summary statistics from a set of images.
                 rimg = img
             end
 
-            cimg, xopt = match_center_and_res(bcimg, rimg)
-            save_fits(joinpath(outdir, replace(basename(f), ".fits"=>"_matchres.fits")), cimg)
+            cimg, xopt = match_center_and_res(stokes(bcimg, :I), img; maxiters = 15_000, grid = g, divergence = NxCorr)
+            # now regrid after blurring to prevent interpolation error
+            rcimg = VLBISkyModels.regrid(cimg, g)
+            nxc = nxcorr(rcimg, bcimg)
+            xopt = merge(xopt, (; nxI = nxc.I, nxP = nxc.LP, nxV = nxc.V))
+            save_fits(joinpath(outdir, replace(basename(f), ".fits" => "_matchres.fits")), rcimg)
             return xopt
         end
 
