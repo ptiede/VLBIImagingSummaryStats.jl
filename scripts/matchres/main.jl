@@ -48,12 +48,10 @@ Extract summary statistics from a set of images.
 - `--restart`: Restart the extraction process from before
 - `--regrid`: Regrid the images before extracting
 """
-@main function main(imfiles::String, bimg::String, outdir::String; stride::Int = 2 * nworkers(), regrid::Bool = false, restart::Bool = false)
+@main function main(imfiles::String, bimg::String, outdir::String; stride::Int=2 * nworkers(), regrid::Bool=false, restart::Bool=false)
     @info "Image files path: $(imfiles)"
     @info "Base image to match res $(bimg)"
     @info "Outputting results to $(outdir)"
-    @info "Using a $(order) order ring model"
-
     !isfile(bimg) && throw(ArgumentError("Base image to match resolution $(bimg) does not exist"))
 
     imfs = loaddir(imfiles)
@@ -67,9 +65,9 @@ Extract summary statistics from a set of images.
     regrid = !regrid
 
     if regrid
-        bcimg = VLBISkyModels.regrid(load_image(bimg; polarization = true), g)
+        bcimg = VLBISkyModels.regrid(load_image(bimg; polarization=true), g)
     else
-        bcimg = load_image(bimg; polarization = true)
+        bcimg = load_image(bimg; polarization=true)
     end
 
     @info "Regridding image : $(regrid)"
@@ -85,7 +83,7 @@ Extract summary statistics from a set of images.
     for ii in indexpart
         @info "Extracting from $(ii[begin]) to $(ii[end])"
         res = pmap(imfs[ii]) do f
-            img = center_image(load_image(f; polarization = true))
+            img = center_image(load_image(f; polarization=true))
 
             if regrid
                 rimg = VLBISkyModels.regrid(img, g)
@@ -93,11 +91,11 @@ Extract summary statistics from a set of images.
                 rimg = img
             end
 
-            cimg, xopt = match_center_and_res(stokes(bcimg, :I), img; maxiters = 15_000, grid = g, divergence = NxCorr)
+            cimg, xopt = match_center_and_res(stokes(bcimg, :I), img; maxiters=15_000, grid=g, divergence=NxCorr)
             # now regrid after blurring to prevent interpolation error
             rcimg = VLBISkyModels.regrid(cimg, g)
             nxc = nxcorr(rcimg, bcimg)
-            xopt = merge(xopt, (; nxI = nxc.I, nxP = nxc.LP, nxV = nxc.V))
+            xopt = merge(xopt, (; nxI=nxc.I, nxP=nxc.LP, nxV=nxc.V))
             save_fits(joinpath(outdir, replace(basename(f), ".fits" => "_matchres.fits")), rcimg)
             return xopt
         end
