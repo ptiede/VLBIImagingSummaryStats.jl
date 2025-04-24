@@ -89,14 +89,10 @@ Extract summary statistics from a set of images.
                 img = smooth(img, μas2rad(blur) / (2 * sqrt(2 * log(2))))
             end
 
-            if regrid
-                rimg = VLBISkyModels.regrid(img, g)
-            else
-                rimg = img
-            end
+            rimg = img
 
 
-            stats = summary_ringparams(rimg; maxiters = fevals, order, divergence = NxCorr)
+            stats = summary_ringparams(rimg; maxiters = fevals, order, divergence = NxCorr, grid=g)
             return stats
         end
         dftmp = DataFrame(res)
