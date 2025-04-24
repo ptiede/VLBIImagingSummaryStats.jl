@@ -89,10 +89,15 @@ Extract summary statistics from a set of images.
                 img = smooth(img, μas2rad(blur) / (2 * sqrt(2 * log(2))))
             end
 
+            if regrid
+                gim = g
+            else
+                gim = nothing
+            end
             rimg = img
+            
 
-
-            stats = summary_ringparams(rimg; maxiters = fevals, order, divergence = NxCorr, grid=g)
+            stats = summary_ringparams(rimg; maxiters = fevals, order, divergence = NxCorr, grid=gim)
             return stats
         end
         dftmp = DataFrame(res)
