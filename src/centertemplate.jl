@@ -33,9 +33,9 @@ Parameter meaning:
     - `xopt`: The optimal template parameters as a NamedTuple whose elements match the model above.
 """
 function center_template(img, template::Type;
-                         grid = axisdims(img), 
-                         div = NxCorr, 
-                         maxiters = 10_000)
+    grid=axisdims(img),
+    div=NxCorr,
+    maxiters=10_000)
     if !isnothing(grid)
         rimg = regrid(img, grid)
     else
@@ -46,18 +46,18 @@ function center_template(img, template::Type;
 end
 
 function center_template(img::IntensityMap{<:StokesParams}, template::Type;
-                         grid = axisdims(img), 
-                         div = NxCorr, 
-                         maxiters = 10_000)
+    grid=axisdims(img),
+    div=NxCorr,
+    maxiters=10_000)
     _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, maxiters)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
-function _optimize(div, func, lower, upper, p0, maxiters = 8_000)
+function _optimize(div, func, lower, upper, p0, maxiters=8_000)
     prob = VIDAProblem(div, func, lower, upper)
-    xopt, θopt, dmin = vida(prob, ECA(;options=Options(f_calls_limit = maxiters, f_tol = 1e-5)); init_params=p0)
+    xopt, θopt, dmin = vida(prob, ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5)); init_params=p0)
     # @info dmin
-    return merge(xopt, (;divmin=dmin)), θopt
+    return merge(xopt, (; divmin=dmin)), θopt
 end
 
 function _center_template(img::IntensityMap, ::Type{<:Disk}, div, maxiters)
@@ -65,22 +65,22 @@ function _center_template(img::IntensityMap, ::Type{<:Disk}, div, maxiters)
 
     x0, y0 = centroid(img)
 
-    temp(x) = modify(VLBISkyModels.GaussDisk(x.σ/x.r0), Stretch(x.r0, x.r0*(1+x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0))  +
-              x.f0*VLBISkyModels.Constant(fieldofview(img).X)
-    lower = (r0 = μas2rad(10.0), σ = μas2rad(1.0),
-             τ  = 0.001, ξτ = 0.0,
-             x0 = -μas2rad(15.0), y0 = -μas2rad(15.0),
-             f0 = 1e-6
-             )
-    upper = (r0 = μas2rad(40.0), σ = μas2rad(40.0),
-             τ = 1.0, ξτ = 1π,
-             x0 = μas2rad(15.0), y0 = μas2rad(15.0),
-             f0=10.0
-             )
-    p0 = (r0 = μas2rad(20.0), σ = μas2rad(4.0),
-          τ = 0.01, ξτ = 0.1,
-          x0 = x0, y0 = y0,
-          f0=1e-3)
+    temp(x) = modify(VLBISkyModels.GaussDisk(x.σ / x.r0), Stretch(x.r0, x.r0 * (1 + x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0)) +
+              x.f0 * VLBISkyModels.Constant(fieldofview(img).X)
+    lower = (r0=μas2rad(10.0), σ=μas2rad(1.0),
+        τ=0.001, ξτ=0.0,
+        x0=-μas2rad(15.0), y0=-μas2rad(15.0),
+        f0=1e-6
+    )
+    upper = (r0=μas2rad(40.0), σ=μas2rad(40.0),
+        τ=1.0, ξτ=1π,
+        x0=μas2rad(15.0), y0=μas2rad(15.0),
+        f0=10.0
+    )
+    p0 = (r0=μas2rad(20.0), σ=μas2rad(4.0),
+        τ=0.01, ξτ=0.1,
+        x0=x0, y0=y0,
+        f0=1e-3)
     return _optimize(bh, temp, lower, upper, p0, maxiters)
 end
 
@@ -137,38 +137,38 @@ function _center_template(img::IntensityMap, ::Type{<:Gaussian}, div, maxiters)
     fovx, fovy = fieldofview(img)
 
     temp(x) = Gauss(x.σ1, x.x0, x.y0) +
-              x.f2*Gauss(x.σ2, x.x1, x.y1) +
-              x.f0*VLBISkyModels.Constant(fieldofview(img).X)
+              x.f2 * Gauss(x.σ2, x.x1, x.y1) +
+              x.f0 * VLBISkyModels.Constant(fieldofview(img).X)
     lower = (
-             σ1 = 2*min(pixelsizes(img)...), 
-             x0 = -fovx/2, y0 = -fovy/2,
-             σ2 = 2*min(pixelsizes(img)...), 
-             x1 = -fovx/2, y1 = -fovy/2,
-             f2 = 0.0,
-            f0 = 1e-6
-             )
+        σ1=2 * min(pixelsizes(img)...),
+        x0=-fovx / 2, y0=-fovy / 2,
+        σ2=2 * min(pixelsizes(img)...),
+        x1=-fovx / 2, y1=-fovy / 2,
+        f2=0.0,
+        f0=1e-6
+    )
     upper = (
-             σ1 = max(fovx, fovy)/3, 
-             x0 = fovx/2, y0 = fovy/2,
-             σ2 = max(fovx, fovy)/3, 
-             x1 = fovx/2, y1 = fovy/2,
-             f2 = 6.0,
-             f0=10.0
-             )
+        σ1=max(fovx, fovy) / 3,
+        x0=fovx / 2, y0=fovy / 2,
+        σ2=max(fovx, fovy) / 3,
+        x1=fovx / 2, y1=fovy / 2,
+        f2=6.0,
+        f0=10.0
+    )
     p0 = (
-            σ1 = (upper.σ1+lower.σ1)/2, 
-            x0 = x0, y0 = y0,
-            σ2 = (upper.σ2+lower.σ2)/2, 
-            x1 = x0, y1 = y0,
-            f2 = 0.5,
-            f0=1e-3
-        )
+        σ1=(upper.σ1 + lower.σ1) / 2,
+        x0=x0, y0=y0,
+        σ2=(upper.σ2 + lower.σ2) / 2,
+        x1=x0, y1=y0,
+        f2=0.5,
+        f0=1e-3
+    )
     xopt, θopt = _optimize(bh, temp, lower, upper, p0, maxiters)
     flip = xopt.x0 < xopt.x1
     if flip
-        return (; σ1 = xopt.σ2, x0 = xopt.x1, y0 = xopt.y1,
-                  σ2 = xopt.σ1, x1 = xopt.x0, y1 = xopt.y0,
-                  f2 = inv(xopt.f2), f0=xopt.f0), θopt
+        return (; σ1=xopt.σ2, x0=xopt.x1, y0=xopt.y1,
+            σ2=xopt.σ1, x1=xopt.x0, y1=xopt.y0,
+            f2=inv(xopt.f2), f0=xopt.f0, divmin=xopt.divmin), θopt
     end
     return xopt, θopt
 end
@@ -177,41 +177,42 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
     bh = div(max.(img, 0.0))
     x0, y0 = centroid(img)
 
-    temp(x) = modify(RingTemplate(RadialGaussian(x.σ/x.r0), AzimuthalCosine(x.s, x.ξ .- x.ξτ)),
-                     Stretch(x.r0, x.r0*(1+x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0))+
-            #   modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
-              x.f0*VLBISkyModels.Constant(fieldofview(img).X)
-    lower = (r0 = μas2rad(10.0), σ = μas2rad(0.5),
-             s = ntuple(_->0.001, N),
-             ξ = ntuple(_->0.0, N),
-             τ = 0.0,
-             ξτ = 0.0,
-             x0 = -μas2rad(20.0), y0 = -μas2rad(20.0),
-            #  σg = μas2rad(30.0),
-            #  xg = -fieldofview(img).X/4,
-            #  yg = -fieldofview(img).Y/4,
-            #  fg = 1e-6,
-             f0 = 1e-6
-             )
-    upper = (r0 = μas2rad(30.0), σ = μas2rad(15.0),
-             s = ntuple(_->0.999, N),
-             ξ = ntuple(_->2π, N),
-             τ = 1.0,
-             ξτ = 1π,
-             x0 = μas2rad(20.0), y0 = μas2rad(20.0),
-            #  σg = fieldofview(img).X/2,
-            #  xg = fieldofview(img).X/4,
-            #  yg = fieldofview(img).Y/4,
-            #  fg = 20.0,
-             f0=10.0
-             )
-    p0 = (r0 = μas2rad(16.0), σ = μas2rad(4.0),
-          s = ntuple(_->0.2, N),
-          ξ = ntuple(_->1π, N),
-          τ = 0.01,
-          ξτ = 0.5π,
-          x0 = x0, y0 = y0,
+    temp(x) =
+        modify(RingTemplate(RadialGaussian(x.σ / x.r0), AzimuthalCosine(x.s, x.ξ .- x.ξτ)),
+            Stretch(x.r0, x.r0 * (1 + x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0)) +
+        #   modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
+        x.f0 * VLBISkyModels.Constant(fieldofview(img).X)
+    lower = (r0=μas2rad(10.0), σ=μas2rad(0.5),
+        s=ntuple(_ -> 0.001, N),
+        ξ=ntuple(_ -> 0.0, N),
+        τ=0.0,
+        ξτ=0.0,
+        x0=-μas2rad(20.0), y0=-μas2rad(20.0),
+        #  σg = μas2rad(30.0),
+        #  xg = -fieldofview(img).X/4,
+        #  yg = -fieldofview(img).Y/4,
+        #  fg = 1e-6,
+        f0=1e-6
+    )
+    upper = (r0=μas2rad(30.0), σ=μas2rad(15.0),
+        s=ntuple(_ -> 0.999, N),
+        ξ=ntuple(_ -> 2π, N),
+        τ=1.0,
+        ξτ=1π,
+        x0=μas2rad(20.0), y0=μas2rad(20.0),
+        #  σg = fieldofview(img).X/2,
+        #  xg = fieldofview(img).X/4,
+        #  yg = fieldofview(img).Y/4,
+        #  fg = 20.0,
+        f0=10.0
+    )
+    p0 = (r0=μas2rad(16.0), σ=μas2rad(4.0),
+        s=ntuple(_ -> 0.2, N),
+        ξ=ntuple(_ -> 1π, N),
+        τ=0.01,
+        ξτ=0.5π,
+        x0=x0, y0=y0,
         #   σg = μas2rad(40.0), xg = 0.0, yg = 0.0, fg = 0.2,
-          f0=0.1)
+        f0=0.1)
     return _optimize(bh, temp, lower, upper, p0, maxiters)
 end
