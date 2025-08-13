@@ -9,5 +9,5 @@ VLBIImagingSummaryStats = "5a169920-935a-41fb-9b04-eb7915926c08"
 VLBISkyModels = "d6343c73-7174-4e0f-bb64-562643efbeca"
 
 [compat]
-VIDA = "0.12"
+VIDA = "0.13"
 VLBISkyModels = "0.6"
