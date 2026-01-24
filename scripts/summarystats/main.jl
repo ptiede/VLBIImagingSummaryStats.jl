@@ -19,6 +19,7 @@ using DataFrames
 using CSV
 using VLBISkyModels
 @everywhere begin
+    using Optimization
     using VIDA
     using VLBISkyModels
     using VLBIImagingSummaryStats
@@ -51,7 +52,7 @@ Extract summary statistics from a set of images.
 - `-r, --regrid`: Regrid the images before extracting
 - `--restart`: Restart the extraction process from before
 """
-@main function main(imfiles::String, outname::String; fevals::Int = 40_000, stride::Int = 2 * nworkers(), code::String = "", order::Int = 4, blur::Float64 = 0.0, regrid::Bool = false, restart::Bool = false)
+@main function main(imfiles::String, outname::String; fevals::Int=40_000, stride::Int=2 * nworkers(), code::String="", order::Int=4, blur::Float64=0.0, regrid::Bool=false, restart::Bool=false)
     @info "Image files path: $(imfiles)"
     @info "Outputting results to $(outname)"
     @info "Using a $(order) order ring model"
@@ -65,7 +66,7 @@ Extract summary statistics from a set of images.
         cfs = fill("unknown", length(imfs))
     end
 
-    g = imagepixels(μas2rad(150.0), μas2rad(150.0), 50, 50)
+    g = imagepixels(μas2rad(120.0), μas2rad(120.0), 64, 64)
 
     @info "Regridding image : $(regrid)"
     @info "Blurring kernel: $(blur) μas"
@@ -83,7 +84,7 @@ Extract summary statistics from a set of images.
     for ii in indexpart
         @info "Extracting from $(ii[begin]) to $(ii[end])"
         res = pmap(imfs[ii]) do f
-            img = center_image(load_image(f; polarization = true))
+            img = center_image(load_image(f; polarization=true))
 
             if blur > 0.0
                 img = smooth(img, μas2rad(blur) / (2 * sqrt(2 * log(2))))
@@ -95,9 +96,9 @@ Extract summary statistics from a set of images.
                 gim = nothing
             end
             rimg = img
-            
 
-            stats = summary_ringparams(rimg; maxiters = fevals, order, divergence = NxCorr, grid=gim)
+
+            stats = summary_ringparams(rimg; maxiters=fevals, order, divergence=NxCorr, grid=gim)
             return stats
         end
         dftmp = DataFrame(res)
