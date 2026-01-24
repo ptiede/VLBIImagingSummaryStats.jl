@@ -221,3 +221,48 @@ function create_problem(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div) wher
         f0=0.1)
     return VIDAProblem(bh, temp, lower, upper), p0
 end
+
+function create_problem(img::IntensityMap{<:Real}, ::Type{<:Stretch{MRing{N}}}, div) where {N}
+    bh = div(max.(img, 0.0))
+    x0, y0 = centroid(img)
+
+    temp(x) =
+        modify(RingTemplate(RadialGaussian(x.σ / x.r0), AzimuthalCosine(x.s, x.ξ .- x.ξτ)),
+            Stretch(x.r0, x.r0*(1+x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0)) +
+        #   modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
+        x.f0 * VLBISkyModels.Constant(fieldofview(img).X)
+        lower = (r0=μas2rad(10.0), σ=μas2rad(0.5),
+        s=ntuple(_ -> 0.001, N),
+        ξ=ntuple(_ -> 0.0, N),
+        τ=0.0,
+        ξτ=0.0,
+        x0=-μas2rad(20.0), y0=-μas2rad(20.0),
+        #  σg = μas2rad(30.0),
+        #  xg = -fieldofview(img).X/4,
+        #  yg = -fieldofview(img).Y/4,
+        #  fg = 1e-6,
+        f0=1e-6
+    )
+    upper = (r0=μas2rad(30.0), σ=μas2rad(15.0),
+        s=ntuple(_ -> 0.999, N),
+        ξ=ntuple(_ -> 2π, N),
+        τ=1.0,
+        ξτ=1π,
+        x0=μas2rad(20.0), y0=μas2rad(20.0),
+        #  σg = fieldofview(img).X/2,
+        #  xg = fieldofview(img).X/4,
+        #  yg = fieldofview(img).Y/4,
+        #  fg = 20.0,
+        f0=10.0
+    )
+    p0 = (r0=μas2rad(16.0), σ=μas2rad(4.0),
+        s=ntuple(_ -> 0.2, N),
+        ξ=ntuple(_ -> 1π, N),
+        τ=0.01,
+        ξτ=0.5π,
+        x0=x0, y0=y0,
+        #   σg = μas2rad(40.0), xg = 0.0, yg = 0.0, fg = 0.2,
+        f0=0.1)
+    return VIDAProblem(bh, temp, lower, upper), p0
+end
+
