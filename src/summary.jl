@@ -54,11 +54,11 @@ function summary_ringparams(img::IntensityMap{<:Real};
                             divergence=NxCorr, 
                             grid = nothing,
                             cfluxdiam=μas2rad(80.0))
-    _, xopt, _ = center_template(img, MRing{order}; maxiters, grid=grid, div=divergence)
+    _, xopt, dmin, _ = center_template(img, MRing{order}; maxiters, grid=grid, div=divergence)
     rx = cfluxdiam/2
     simg = shifted(img, -xopt.x0, -xopt.y0)[X=-rx..rx, Y=-rx..rx]
     cflux = flux(simg)
-    return merge(_flatten_tuple(xopt), (;Itot=cflux))
+    return merge(_flatten_tuple(xopt), (;Itot=cflux, divmin=dmin))
 end
 
 function _flatten_tuple(nt::NamedTuple)

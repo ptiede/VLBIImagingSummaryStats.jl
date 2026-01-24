@@ -49,8 +49,8 @@ function center_template(
     if isnothing(initial_params)
         initial_params = p0
     end
-    xopt, θopt = _optimize(prob, initial_params; maxiters=maxiters, optimizer=optimizer)
-    return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
+    xopt, dmin, θopt = _optimize(prob, initial_params; maxiters=maxiters, optimizer=optimizer)
+    return shifted(img, -xopt.x0, -xopt.y0), xopt, dmin, θopt
 end
 
 function center_template(img::IntensityMap{<:StokesParams}, template::Type;
@@ -67,7 +67,7 @@ end
 
 function _optimize(prob, initial_params; maxiters=8_000, optimizer = ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5)))
     xopt, θopt, dmin = vida(prob, optimizer; init_params=initial_params)
-    return merge(xopt, (; divmin=dmin)), θopt
+    return xopt, dmin, θopt
 end
 
 
