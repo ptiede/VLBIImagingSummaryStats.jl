@@ -19,6 +19,7 @@ using DataFrames
 using CSV
 using VLBISkyModels
 @everywhere begin
+    using Optimization
     using VIDA
     using VLBISkyModels
     using VLBIImagingSummaryStats
@@ -66,7 +67,7 @@ Extract summary statistics from a set of images.
         cfs = fill("unknown", length(imfs))
     end
 
-    g = imagepixels(μas2rad(150.0), μas2rad(150.0), 50, 50)
+    g = imagepixels(μas2rad(120.0), μas2rad(120.0), 64, 64)
 
     @info "Regridding image : $(regrid)"
     @info "Blurring kernel: $(blur) μas"
@@ -96,9 +97,9 @@ Extract summary statistics from a set of images.
                 gim = nothing
             end
             rimg = img
-            
 
-            stats = summary_ringparams(rimg; maxiters = fevals, order, divergence = NxCorr, grid=gim)
+
+            stats = summary_ringparams(rimg; maxiters=fevals, order, divergence=NxCorr, grid=gim)
             return stats
         end
         dftmp = DataFrame(res)
