@@ -32,35 +32,46 @@ Parameter meaning:
     - `θopt`: The optimal template
     - `xopt`: The optimal template parameters as a NamedTuple whose elements match the model above.
 """
-function center_template(img, template::Type;
+function center_template(
+    img, template::Type;
     grid=axisdims(img),
     div=NxCorr,
-    maxiters=10_000)
+    maxiters=10_000, 
+    initial_params=nothing, 
+    optimizer = ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5))
+)
     if !isnothing(grid)
         rimg = regrid(img, grid)
     else
         rimg = img
     end
-    xopt, θopt = _center_template(rimg, template, div, maxiters)
+    prob, p0 = create_problem(rimg, template, div)
+    if isnothing(initial_params)
+        initial_params = p0
+    end
+    xopt, θopt = _optimize(prob, initial_params; maxiters=maxiters, optimizer=optimizer)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
 function center_template(img::IntensityMap{<:StokesParams}, template::Type;
     grid=axisdims(img),
     div=NxCorr,
-    maxiters=10_000)
-    _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, maxiters)
+    maxiters=10_000,
+    initial_params=nothing, 
+    optimizer = ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5))
+)
+
+    _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, maxiters, initial_params, optimizer)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
-function _optimize(div, func, lower, upper, p0, maxiters=8_000)
-    prob = VIDAProblem(div, func, lower, upper)
-    xopt, θopt, dmin = vida(prob, ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5)); init_params=p0)
-    # @info dmin
+function _optimize(prob, initial_params; maxiters=8_000, optimizer = ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5)))
+    xopt, θopt, dmin = vida(prob, optimizer; init_params=initial_params)
     return merge(xopt, (; divmin=dmin)), θopt
 end
 
-function _center_template(img::IntensityMap, ::Type{<:Disk}, div, maxiters)
+
+function create_problem(img::IntensityMap, ::Type{<:Disk}, div)
     bh = div(max.(img, 0.0))
 
     x0, y0 = centroid(img)
@@ -81,7 +92,8 @@ function _center_template(img::IntensityMap, ::Type{<:Disk}, div, maxiters)
         τ=0.01, ξτ=0.1,
         x0=x0, y0=y0,
         f0=1e-3)
-    return _optimize(bh, temp, lower, upper, p0, maxiters)
+    
+    return VIDAProblem(bh, temp, lower, upper), p0
 end
 
 @doc raw"""
@@ -129,7 +141,7 @@ function center_ring(img::IntensityMap; order=1, g=axisdims(img), maxiters=10_00
 end
 
 
-function _center_template(img::IntensityMap, ::Type{<:Gaussian}, div, maxiters)
+function create_problem(img::IntensityMap, ::Type{<:Gaussian}, div)
     bh = div(max.(img, 0.0))
 
     x0, y0 = centroid(img)
@@ -152,7 +164,7 @@ function _center_template(img::IntensityMap, ::Type{<:Gaussian}, div, maxiters)
         x0=fovx / 2, y0=fovy / 2,
         σ2=max(fovx, fovy) / 3,
         x1=fovx / 2, y1=fovy / 2,
-        f2=6.0,
+        f2=1.0,
         f0=10.0
     )
     p0 = (
@@ -163,30 +175,23 @@ function _center_template(img::IntensityMap, ::Type{<:Gaussian}, div, maxiters)
         f2=0.5,
         f0=1e-3
     )
-    xopt, θopt = _optimize(bh, temp, lower, upper, p0, maxiters)
-    flip = xopt.x0 < xopt.x1
-    if flip
-        return (; σ1=xopt.σ2, x0=xopt.x1, y0=xopt.y1,
-            σ2=xopt.σ1, x1=xopt.x0, y1=xopt.y0,
-            f2=inv(xopt.f2), f0=xopt.f0, divmin=xopt.divmin), θopt
-    end
-    return xopt, θopt
+    return VIDAProblem(bh, temp, lower, upper), p0
 end
 
-function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, maxiters) where {N}
+function create_problem(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div) where {N}
     bh = div(max.(img, 0.0))
     x0, y0 = centroid(img)
 
     temp(x) =
-        modify(RingTemplate(RadialGaussian(x.σ / x.r0), AzimuthalCosine(x.s, x.ξ .- x.ξτ)),
-            Stretch(x.r0, x.r0 * (1 + x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0)) +
+        modify(RingTemplate(RadialGaussian(x.σ / x.r0), AzimuthalCosine(x.s, x.ξ)),
+            Stretch(x.r0), Shift(x.x0, x.y0)) +
         #   modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
         x.f0 * VLBISkyModels.Constant(fieldofview(img).X)
-    lower = (r0=μas2rad(10.0), σ=μas2rad(0.5),
+        lower = (r0=μas2rad(10.0), σ=μas2rad(0.5),
         s=ntuple(_ -> 0.001, N),
         ξ=ntuple(_ -> 0.0, N),
-        τ=0.0,
-        ξτ=0.0,
+        # τ=0.0,
+        # ξτ=0.0,
         x0=-μas2rad(20.0), y0=-μas2rad(20.0),
         #  σg = μas2rad(30.0),
         #  xg = -fieldofview(img).X/4,
@@ -197,8 +202,8 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
     upper = (r0=μas2rad(30.0), σ=μas2rad(15.0),
         s=ntuple(_ -> 0.999, N),
         ξ=ntuple(_ -> 2π, N),
-        τ=1.0,
-        ξτ=1π,
+        # τ=1.0,
+        # ξτ=1π,
         x0=μas2rad(20.0), y0=μas2rad(20.0),
         #  σg = fieldofview(img).X/2,
         #  xg = fieldofview(img).X/4,
@@ -209,10 +214,10 @@ function _center_template(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div, ma
     p0 = (r0=μas2rad(16.0), σ=μas2rad(4.0),
         s=ntuple(_ -> 0.2, N),
         ξ=ntuple(_ -> 1π, N),
-        τ=0.01,
-        ξτ=0.5π,
+        # τ=0.01,
+        # ξτ=0.5π,
         x0=x0, y0=y0,
         #   σg = μas2rad(40.0), xg = 0.0, yg = 0.0, fg = 0.2,
         f0=0.1)
-    return _optimize(bh, temp, lower, upper, p0, maxiters)
+    return VIDAProblem(bh, temp, lower, upper), p0
 end
