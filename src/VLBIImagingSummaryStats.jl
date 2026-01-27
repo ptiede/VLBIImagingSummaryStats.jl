@@ -9,6 +9,7 @@ using CSV
 using DataFrames
 using NamedTupleTools
 using VIDA
+using Optimization
 using OptimizationMetaheuristics: OptimizationMetaheuristics, ECA, Options
 using Statistics
 
