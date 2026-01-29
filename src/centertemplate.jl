@@ -24,7 +24,6 @@ Parameter meaning:
  - `template::Type`: The template model to use.
  - `grid`: The grid to use for the template matching. Default is the image grid, but smaller grids can be used to speed up the optimization.
  - `div::Function=NxCorr`: The divergence to use for the optimization function.
- - `maxiters::Int=10_000`: The maximum number of iterations to use when optimizing for the ring center.
 
 ## Returns:
     The tuple `(img, xopt, θopt)` where:
@@ -36,9 +35,9 @@ function center_template(
     img, template::Type;
     grid=axisdims(img),
     div=NxCorr,
-    maxiters=10_000, 
     initial_params=nothing, 
-    optimizer = ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5))
+    optimizer = ECA(; options=Options(f_calls_limit=10^3, f_tol=1e-5)),
+    kwargs...
 )
     if !isnothing(grid)
         rimg = regrid(img, grid)
@@ -49,24 +48,23 @@ function center_template(
     if isnothing(initial_params)
         initial_params = p0
     end
-    xopt, dmin, θopt = _optimize(prob, initial_params; maxiters=maxiters, optimizer=optimizer)
+    xopt, dmin, θopt = _optimize(prob, initial_params; optimizer=optimizer, kwargs...)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, dmin, θopt
 end
 
 function center_template(img::IntensityMap{<:StokesParams}, template::Type;
     grid=axisdims(img),
     div=NxCorr,
-    maxiters=10_000,
     initial_params=nothing, 
-    optimizer = ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5))
+    optimizer = ECA(; options=Options(f_calls_limit=10^3, f_tol=1e-5))
 )
 
-    _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, maxiters, initial_params, optimizer)
+    _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, initial_params, optimizer)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
-function _optimize(prob, initial_params; maxiters=8_000, optimizer = ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5)))
-    xopt, θopt, dmin = vida(prob, optimizer; init_params=initial_params)
+function _optimize(prob, initial_params; optimizer = ECA(; options=Options(f_calls_limit=10^3, f_tol=1e-5)), kwargs...)
+    xopt, θopt, dmin = vida(prob, optimizer; init_params=initial_params, kwargs...)
     return xopt, dmin, θopt
 end
 
