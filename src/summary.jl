@@ -54,7 +54,9 @@ function summary_ringparams(img::IntensityMap{<:Real};
                             divergence=NxCorr, 
                             grid = nothing,
                             cfluxdiam=μas2rad(80.0))
-    _, xopt, dmin, _ = center_template(img, MRing{order}; maxiters, grid=grid, div=divergence)
+    _, xopt, dmin, _ = center_template(img, MRing{order}; grid=grid, div=divergence, 
+                                       optimizer=ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5))
+                                    )
     rx = cfluxdiam/2
     simg = shifted(img, -xopt.x0, -xopt.y0)[X=-rx..rx, Y=-rx..rx]
     cflux = flux(simg)
