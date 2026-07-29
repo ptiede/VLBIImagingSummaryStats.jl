@@ -1,3 +1,17 @@
+export MultiStageOptimizer
+
+struct MultiStageOptimizer{G,L,Gopts,Lopts}
+    global_opt::G
+    local_opt::L
+    gkwargs::Gopts
+    lkwargs::Lopts
+end
+
+
+const DEFAULT_OPTIMIZER = MultiStageOptimizer(NLopt.GN_DIRECT_L(), NLopt.LN_NELDERMEAD(), (; maxiters=1000, maxtime=1.0), (; maxiters=1000, maxtime=1.0))
+
+
+
 @doc raw"""
     center_template(img::IntensityMap template::Type; 
                     grid=axisdims(img), 
@@ -35,8 +49,8 @@ function center_template(
     img, template::Type;
     grid=axisdims(img),
     div=NxCorr,
-    initial_params=nothing, 
-    optimizer = ECA(; options=Options(f_calls_limit=10^3, f_tol=1e-5)),
+    initial_params=nothing,
+    optimizer=DEFAULT_OPTIMIZER,
     kwargs...
 )
     if !isnothing(grid)
@@ -48,23 +62,29 @@ function center_template(
     if isnothing(initial_params)
         initial_params = p0
     end
-    xopt, dmin, θopt = _optimize(prob, initial_params; optimizer=optimizer, kwargs...)
+    xopt, dmin, θopt = _optimize(prob, initial_params, optimizer; kwargs...)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, dmin, θopt
 end
 
 function center_template(img::IntensityMap{<:StokesParams}, template::Type;
     grid=axisdims(img),
     div=NxCorr,
-    initial_params=nothing, 
-    optimizer = ECA(; options=Options(f_calls_limit=10^3, f_tol=1e-5))
+    initial_params=nothing,
+    optimizer=DEFAULT_OPTIMIZER
 )
 
     _, xopt, θopt = center_template(stokes(img, :I), template; grid, div, initial_params, optimizer)
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
-function _optimize(prob, initial_params; optimizer = ECA(; options=Options(f_calls_limit=10^3, f_tol=1e-5)), kwargs...)
+function _optimize(prob, initial_params, optimizer=DEFAULT_OPTIMIZER, kwargs...)
     xopt, θopt, dmin = vida(prob, optimizer; init_params=initial_params, kwargs...)
+    return xopt, dmin, θopt
+end
+
+function _optimize(prob, initial_params, optimizer::MultiStageOptimizer)
+    xopt, _, _ = vida(prob, optimizer.global_opt; init_params=initial_params, optimizer.gkwargs...)
+    xoptf, θopt, dmin = vida(prob, optimizer.local_opt; init_params=xopt, optimizer.lkwargs...)
     return xopt, dmin, θopt
 end
 
@@ -90,7 +110,7 @@ function create_problem(img::IntensityMap, ::Type{<:Disk}, div)
         τ=0.01, ξτ=0.1,
         x0=x0, y0=y0,
         f0=1e-3)
-    
+
     return VIDAProblem(bh, temp, lower, upper), p0
 end
 
@@ -185,7 +205,7 @@ function create_problem(img::IntensityMap{<:Real}, ::Type{<:MRing{N}}, div) wher
             Stretch(x.r0), Shift(x.x0, x.y0)) +
         #   modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
         x.f0 * VLBISkyModels.Constant(fieldofview(img).X)
-        lower = (r0=μas2rad(10.0), σ=μas2rad(0.5),
+    lower = (r0=μas2rad(10.0), σ=μas2rad(0.5),
         s=ntuple(_ -> 0.001, N),
         ξ=ntuple(_ -> 0.0, N),
         # τ=0.0,
@@ -226,10 +246,10 @@ function create_problem(img::IntensityMap{<:Real}, ::Type{<:Stretch{MRing{N}}}, 
 
     temp(x) =
         modify(RingTemplate(RadialGaussian(x.σ / x.r0), AzimuthalCosine(x.s, x.ξ .- x.ξτ)),
-            Stretch(x.r0, x.r0*(1+x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0)) +
+            Stretch(x.r0, x.r0 * (1 + x.τ)), Rotate(x.ξτ), Shift(x.x0, x.y0)) +
         #   modify(Gaussian(), Stretch(x.σg), Shift(x.xg, x.yg), Renormalize(x.fg)) +
         x.f0 * VLBISkyModels.Constant(fieldofview(img).X)
-        lower = (r0=μas2rad(10.0), σ=μas2rad(0.5),
+    lower = (r0=μas2rad(10.0), σ=μas2rad(0.5),
         s=ntuple(_ -> 0.001, N),
         ξ=ntuple(_ -> 0.0, N),
         τ=0.0,
