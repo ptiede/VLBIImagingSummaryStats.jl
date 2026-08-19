@@ -10,6 +10,7 @@ using DataFrames
 using NamedTupleTools
 using VIDA
 using OptimizationNLopt
+using OptimizationMetaheuristics
 using Statistics
 
 include("centertemplate.jl")

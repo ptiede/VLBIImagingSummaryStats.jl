@@ -77,12 +77,12 @@ function center_template(img::IntensityMap{<:StokesParams}, template::Type;
     return shifted(img, -xopt.x0, -xopt.y0), xopt, θopt
 end
 
-function _optimize(prob, initial_params, optimizer=DEFAULT_OPTIMIZER, kwargs...)
+function _optimize(prob, initial_params, optimizer=DEFAULT_OPTIMIZER; kwargs...)
     xopt, θopt, dmin = vida(prob, optimizer; init_params=initial_params, kwargs...)
     return xopt, dmin, θopt
 end
 
-function _optimize(prob, initial_params, optimizer::MultiStageOptimizer)
+function _optimize(prob, initial_params, optimizer::MultiStageOptimizer; kwargs...)
     xopt, _, _ = vida(prob, optimizer.global_opt; init_params=initial_params, optimizer.gkwargs...)
     xoptf, θopt, dmin = vida(prob, optimizer.local_opt; init_params=xopt, optimizer.lkwargs...)
     return xopt, dmin, θopt

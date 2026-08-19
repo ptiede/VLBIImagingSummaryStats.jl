@@ -55,7 +55,7 @@ function summary_ringparams(img::IntensityMap{<:Real};
                             grid = nothing,
                             cfluxdiam=μas2rad(80.0))
     _, xopt, dmin, _ = center_template(img, MRing{order}; grid=grid, div=divergence, 
-                                       optimizer=ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5))
+                                       optimizer=ECA(; options=Options(f_calls_limit=maxiters, f_tol=1e-5)), maxiters=maxiters
                                     )
     rx = cfluxdiam/2
     simg = shifted(img, -xopt.x0, -xopt.y0)[X=-rx..rx, Y=-rx..rx]
